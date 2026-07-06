@@ -1,0 +1,255 @@
+<?php
+
+return [
+    'brand' => 'CODFlow',
+
+    'nav' => [
+        'groups' => [
+            'sales' => 'المبيعات',
+            'inventory' => 'المخزون',
+            'crm' => 'إدارة العملاء',
+            'finance' => 'المالية',
+            'team' => 'الفريق',
+            'system' => 'النظام',
+        ],
+        'orders' => 'الطلبات',
+        'products' => 'المنتجات',
+        'clients' => 'العملاء',
+        'users' => 'المستخدمون',
+        'settings' => 'الإعدادات',
+        'shipments' => 'الشحنات',
+        'delivery_companies' => 'شركات التوصيل',
+        'invoices' => 'الفواتير',
+        'payment_plannings' => 'جدولة الدفع',
+        'return_bons' => 'أذونات الإرجاع',
+        'pickup_requests' => 'طلبات الاستلام',
+        'complaints' => 'الشكاوى',
+        'messages' => 'الرسائل',
+        'expenses' => 'المصروفات',
+        'warehouses' => 'المستودعات',
+        'stock_movements' => 'حركات المخزون',
+    ],
+
+    'dashboard' => [
+        'title' => 'لوحة التحكم',
+        'subtitle' => 'نظرة شاملة على نشاط الدفع عند الاستلام',
+        'total_orders' => 'إجمالي الطلبات',
+        'delivered' => 'تم التسليم',
+        'returned' => 'مرتجعة',
+        'cancelled' => 'ملغاة',
+        'revenue' => 'الإيرادات',
+        'profit' => 'الربح التقديري',
+        'low_stock' => 'مخزون منخفض',
+        'complaints' => 'شكاوى معلقة',
+        'vs_last_month' => 'مقارنة بالشهر الماضي',
+        'banner' => [
+            'hello' => 'مرحباً',
+            'message' => 'إليك نظرة عامة على نشاط الدفع عند الاستلام في الوقت الفعلي.',
+        ],
+        'distribution' => [
+            'delivered' => 'مُسلّمة',
+            'returned' => 'مرتجعة',
+            'cancelled' => 'ملغاة',
+            'in_progress' => 'قيد المعالجة',
+        ],
+        'view_all' => 'عرض الكل',
+        'units' => 'وحدة',
+        'no_data' => 'لا توجد بيانات',
+        'stock_current' => 'المخزون الحالي',
+        'stock_threshold' => 'الحد',
+        'stock_ok' => 'لا توجد تنبيهات مخزون',
+        'charts' => [
+            'revenue_evolution' => 'تطور الإيرادات',
+            'filter_14' => '14 يوماً',
+            'filter_30' => 'آخر 30 يوماً',
+            'revenue_label' => 'درهم',
+            'status' => 'توزيع الطلبات',
+            'top_products' => 'أفضل المنتجات',
+            'stock_alerts' => 'تنبيهات المخزون',
+            'latest_orders' => 'أحدث الطلبات',
+        ],
+        'table' => [
+            'order' => 'الطلب',
+            'client' => 'العميل',
+            'city' => 'المدينة',
+            'amount' => 'المبلغ',
+            'date' => 'التاريخ',
+        ],
+    ],
+
+    'order' => [
+        'section_order' => 'الطلب',
+        'section_client' => 'العميل والتوصيل',
+        'section_amounts' => 'المبالغ',
+        'section_notes' => 'ملاحظات',
+        'quick_actions' => 'إجراءات سريعة',
+        'delivery_note' => 'إذن التسليم',
+        'print' => 'طباعة',
+        'no_notes' => 'لا توجد ملاحظات',
+    ],
+
+    'enums' => [
+        'user_role' => [
+            'admin' => 'مدير النظام',
+            'manager' => 'مدير',
+            'agent' => 'وكيل',
+            'delivery_agent' => 'مندوب التوصيل',
+            'stock_manager' => 'مسؤول المخزون',
+            'finance' => 'المالية',
+        ],
+        'product_status' => [
+            'active' => 'نشط',
+            'inactive' => 'غير نشط',
+        ],
+        'order_status' => [
+            'new' => 'جديدة',
+            'confirmed' => 'مؤكدة',
+            'prepared' => 'مُجهزة',
+            'shipped' => 'مشحونة',
+            'delivered' => 'مُسلّمة',
+            'returned' => 'مرتجعة',
+            'cancelled' => 'ملغاة',
+        ],
+        'payment_status' => [
+            'unpaid' => 'غير مدفوعة',
+            'paid' => 'مدفوعة',
+            'refunded' => 'مستردة',
+        ],
+        'order_source' => [
+            'facebook' => 'فيسبوك',
+            'instagram' => 'إنستغرام',
+            'tiktok' => 'تيك توك',
+            'website' => 'الموقع',
+            'whatsapp' => 'واتساب',
+            'other' => 'أخرى',
+        ],
+        'stock_movement_type' => [
+            'in' => 'إدخال مخزون',
+            'out' => 'إخراج مخزون',
+            'adjustment' => 'تعديل',
+            'return' => 'إرجاع',
+        ],
+        'shipment_status' => [
+            'pending' => 'قيد الانتظار',
+            'picked_up' => 'تم الاستلام',
+            'in_transit' => 'في الطريق',
+            'delivered' => 'تم التسليم',
+            'returned' => 'مرتجعة',
+            'failed' => 'فشلت',
+        ],
+        'invoice_status' => [
+            'pending' => 'قيد الانتظار',
+            'paid' => 'مدفوعة',
+            'cancelled' => 'ملغاة',
+        ],
+        'payment_planning_status' => [
+            'planned' => 'مخطط',
+            'received' => 'مستلم',
+            'delayed' => 'متأخر',
+        ],
+        'complaint_status' => [
+            'open' => 'مفتوحة',
+            'in_progress' => 'قيد المعالجة',
+            'resolved' => 'محلولة',
+            'rejected' => 'مرفوضة',
+        ],
+        'complaint_priority' => [
+            'low' => 'منخفضة',
+            'medium' => 'متوسطة',
+            'high' => 'عالية',
+        ],
+        'return_bon_status' => [
+            'requested' => 'مطلوب',
+            'accepted' => 'مقبول',
+            'received' => 'مستلم',
+            'refused' => 'مرفوض',
+        ],
+        'pickup_request_status' => [
+            'pending' => 'قيد الانتظار',
+            'accepted' => 'مقبولة',
+            'done' => 'مكتملة',
+            'cancelled' => 'ملغاة',
+        ],
+    ],
+
+    'footer' => [
+        'rights' => 'جميع الحقوق محفوظة.',
+        'version' => 'الإصدار',
+    ],
+
+    'locale' => [
+        'french' => 'Français',
+        'arabic' => 'العربية',
+    ],
+
+    'auth' => [
+        'login_title' => 'تسجيل الدخول',
+        'login_subtitle' => 'الوصول إلى لوحة إدارة الدفع عند الاستلام',
+        'brand_message' => 'أدر الطلبات والمخزون والتوصيل من واجهة واحدة.',
+        'feature_orders' => 'متابعة الطلبات في الوقت الفعلي',
+        'feature_stock' => 'إدارة المخزون والتنبيهات',
+        'feature_dashboard' => 'لوحة القيادة والإحصائيات',
+    ],
+
+    'products' => [
+        'image' => 'الصورة',
+    ],
+
+    'validation' => [
+        'email_unique' => 'هذا البريد الإلكتروني مستخدم بالفعل من قبل مستخدم آخر.',
+    ],
+
+    'fields' => [
+        'name' => 'الاسم',
+        'full_name' => 'الاسم الكامل',
+        'email' => 'البريد الإلكتروني',
+        'phone' => 'الهاتف',
+        'second_phone' => 'هاتف ثانٍ',
+        'password' => 'كلمة المرور',
+        'role' => 'الدور',
+        'is_active' => 'نشط',
+        'logo' => 'الشعار',
+        'city' => 'المدينة',
+        'address' => 'العنوان',
+        'notes' => 'ملاحظات',
+        'is_blacklisted' => 'قائمة سوداء',
+        'created_at' => 'تاريخ الإنشاء',
+        'company_name' => 'اسم الشركة',
+        'rib' => 'RIB',
+        'default_delivery_fee' => 'رسوم التوصيل الافتراضية',
+        'order_prefix' => 'بادئة الطلب',
+        'invoice_prefix' => 'بادئة الفاتورة',
+        'client' => 'العميل',
+        'tracking' => 'التتبع',
+        'carrier' => 'الناقل',
+        'delivery_company' => 'شركة التوصيل',
+        'order' => 'الطلب',
+        'sku' => 'SKU',
+        'assigned_to' => 'مسند إلى',
+        'changed_by' => 'عدّله',
+        'created_by' => 'أنشأه',
+        'excel_file' => 'ملف Excel',
+    ],
+
+    'sections' => [
+        'user' => 'المستخدم',
+        'permissions' => 'الصفحات المسموحة',
+        'company' => 'الشركة',
+        'defaults' => 'القيم الافتراضية',
+    ],
+
+    'actions' => [
+        'export_excel' => 'تصدير Excel',
+        'import_excel' => 'استيراد Excel',
+        'download_template' => 'تحميل النموذج',
+    ],
+
+    'users' => [
+        'allowed_pages' => 'الصفحات المتاحة',
+        'allowed_pages_help' => 'حدد الوحدات التي يمكن لهذا المستخدم رؤيتها. المسؤول لديه دائماً وصول كامل.',
+    ],
+
+    'clients' => [
+        'logo' => 'صورة العميل',
+    ],
+];

@@ -1,0 +1,903 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* ═══════════════════════════════════════════
+   CODFlow — Mockup UI Theme
+   ═══════════════════════════════════════════ */
+
+:root {
+    --codflow-bg: #f1f5f9;
+    --codflow-card: #ffffff;
+    --codflow-purple: #7c3aed;
+    --codflow-purple-dark: #6d28d9;
+    --codflow-pink: #ec4899;
+    --codflow-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.04);
+    --codflow-shadow-hover: 0 8px 24px rgba(124, 58, 237, 0.12);
+}
+
+/* ─── Body & layout ─── */
+.fi-body {
+    background: var(--codflow-bg) !important;
+}
+
+.fi-main {
+    animation: codflow-fade-in 0.35s ease;
+}
+
+.fi-page-dashboard .fi-header {
+    display: none !important;
+}
+
+.fi-page-dashboard .fi-page-main {
+    padding-top: 0.5rem;
+}
+
+@keyframes codflow-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Topbar ─── */
+.fi-topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.fi-topbar .fi-global-search-field {
+    border-radius: 0.75rem;
+    background: #f8fafc;
+}
+
+/* ─── Sidebar ─── */
+.fi-sidebar {
+    background: linear-gradient(180deg, #1e1b4b 0%, #312e81 55%, #3730a3 100%) !important;
+    border-inline-end: none !important;
+    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.14);
+}
+
+.fi-sidebar-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding-block: 1rem;
+    background: transparent !important;
+    box-shadow: none !important;
+    ring: none !important;
+}
+
+.fi-sidebar .fi-logo,
+.fi-sidebar .fi-logo span,
+.fi-sidebar-header {
+    color: #ffffff !important;
+}
+
+.fi-sidebar-nav {
+    padding-inline: 0.625rem !important;
+    padding-block: 0.5rem !important;
+}
+
+/* Groupes (ÉQUIPE, CRM, …) */
+.fi-sidebar .fi-sidebar-group-label {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.fi-sidebar .fi-sidebar-group-btn .fi-icon,
+.fi-sidebar .fi-sidebar-group-dropdown-trigger-btn .fi-icon {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Liens du menu */
+.fi-sidebar .fi-sidebar-item-btn {
+    border-radius: 0.75rem;
+    font-weight: 600;
+    padding-block: 0.65rem !important;
+    transition: all 0.2s ease;
+}
+
+.fi-sidebar .fi-sidebar-item-label {
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 0.9375rem !important;
+    font-weight: 600 !important;
+}
+
+.fi-sidebar .fi-sidebar-item-btn > .fi-icon {
+    color: rgba(255, 255, 255, 0.78) !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+.fi-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover,
+.fi-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.fi-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover .fi-sidebar-item-label,
+.fi-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover > .fi-icon {
+    color: #ffffff !important;
+}
+
+/* Élément actif */
+.fi-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background: rgba(255, 255, 255, 0.22) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.fi-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.fi-sidebar .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+    color: #fde047 !important;
+}
+
+.fi-sidebar .fi-sidebar-item-badge,
+.fi-sidebar .fi-sidebar-item-badge-ctn .fi-badge {
+    background: #fde047 !important;
+    color: #1e1b4b !important;
+    font-weight: 700;
+}
+
+.fi-sidebar .fi-sidebar-database-notifications-btn-label {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.fi-sidebar .fi-sidebar-database-notifications-btn > .fi-icon {
+    color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.fi-sidebar .fi-sidebar-database-notifications-btn:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.fi-sidebar-close-sidebar-btn,
+.fi-sidebar-open-sidebar-btn,
+.fi-sidebar-close-collapse-sidebar-btn,
+.fi-sidebar-open-collapse-sidebar-btn {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.fi-sidebar-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Welcome banner ─── */
+.codflow-dashboard-banner {
+    margin-bottom: 1.25rem;
+    grid-column: 1 / -1;
+}
+
+.codflow-dashboard-banner__inner {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 1.75rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 45%, #ec4899 100%);
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.28);
+    overflow: hidden;
+}
+
+.codflow-dashboard-banner__inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 85% 20%, rgba(255,255,255,0.18) 0%, transparent 45%),
+        radial-gradient(circle at 10% 80%, rgba(255,255,255,0.1) 0%, transparent 40%);
+    pointer-events: none;
+}
+
+.codflow-dashboard-banner__content {
+    position: relative;
+    z-index: 1;
+}
+
+.codflow-dashboard-banner__title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.3;
+}
+
+.codflow-dashboard-banner__subtitle {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.codflow-dashboard-banner__date {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+}
+
+/* ─── Stat cards (KPI row) ─── */
+.fi-wi-stats-overview {
+    gap: 1rem !important;
+}
+
+.fi-wi-stats-overview-stat {
+    position: relative;
+    border-radius: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    background: var(--codflow-card) !important;
+    box-shadow: var(--codflow-shadow) !important;
+    padding: 1.125rem 1.25rem !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--codflow-shadow-hover) !important;
+}
+
+/* Hide sparkline charts — mockup uses trend text only */
+.fi-wi-stats-overview-stat-chart {
+    display: none !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.02em;
+}
+
+.fi-wi-stats-overview-stat-label {
+    font-size: 0.8125rem !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+.fi-wi-stats-overview-stat-description {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    margin-top: 0.5rem;
+}
+
+.fi-wi-stats-overview-stat-icon {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    border-radius: 0.625rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fi-wi-stats-overview-stat-icon-ctn {
+    position: absolute !important;
+    top: 1rem;
+    right: 1rem;
+}
+
+/* ─── Chart widgets ─── */
+.fi-wi-chart {
+    border-radius: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    background: var(--codflow-card) !important;
+    box-shadow: var(--codflow-shadow) !important;
+    transition: box-shadow 0.25s ease;
+}
+
+.fi-wi-chart:hover {
+    box-shadow: var(--codflow-shadow-hover) !important;
+}
+
+.fi-wi-chart .fi-section-header-heading {
+    font-size: 0.9375rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    background: none !important;
+    -webkit-text-fill-color: #1e293b !important;
+}
+
+.fi-wi-chart-filter select {
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    border-color: #e2e8f0;
+}
+
+/* ─── Custom panel widgets ─── */
+.codflow-panel-widget {
+    height: 100%;
+}
+
+.codflow-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    background: var(--codflow-card);
+    box-shadow: var(--codflow-shadow);
+    overflow: hidden;
+}
+
+.codflow-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.codflow-panel__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.codflow-panel__link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--codflow-purple);
+    text-decoration: none;
+}
+
+.codflow-panel__link:hover {
+    color: var(--codflow-purple-dark);
+    text-decoration: underline;
+}
+
+.codflow-panel__body {
+    flex: 1;
+    padding: 0.5rem 0;
+}
+
+.codflow-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    transition: background 0.15s ease;
+}
+
+.codflow-list-item:hover {
+    background: #f8fafc;
+}
+
+.codflow-list-item__avatar {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+.codflow-list-item__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.codflow-list-item__avatar--product {
+    background: #ede9fe;
+    color: var(--codflow-purple);
+}
+
+.codflow-list-item__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.codflow-list-item__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.codflow-list-item__subtitle {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.codflow-list-item__metric {
+    text-align: right;
+}
+
+.codflow-list-item__value {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--codflow-purple);
+}
+
+.codflow-list-item__unit {
+    font-size: 0.6875rem;
+    color: #94a3b8;
+}
+
+.codflow-list-item__stock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.codflow-stock-pill {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.codflow-stock-pill--current {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.codflow-stock-pill--threshold {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.codflow-empty {
+    padding: 2rem 1.25rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+/* ─── Table widgets ─── */
+.fi-wi-table {
+    border-radius: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    background: var(--codflow-card) !important;
+    box-shadow: var(--codflow-shadow) !important;
+    overflow: hidden;
+}
+
+.fi-wi-table .fi-section-header-heading {
+    font-size: 0.9375rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    background: none !important;
+    -webkit-text-fill-color: #1e293b !important;
+}
+
+.fi-ta-header-cell {
+    background: #f8fafc !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.fi-ta-row {
+    transition: background 0.15s ease;
+}
+
+.fi-ta-row:hover {
+    background: #faf5ff !important;
+}
+
+.fi-ta-row .fi-badge {
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.625rem;
+}
+
+/* ─── All pages — sections & cards ─── */
+.fi-section {
+    border-radius: 1rem !important;
+    border: 1px solid #e2e8f0 !important;
+    background: var(--codflow-card) !important;
+    box-shadow: var(--codflow-shadow) !important;
+}
+
+.fi-section-header-heading {
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    background: none !important;
+    -webkit-text-fill-color: #1e293b !important;
+}
+
+/* ─── Buttons ─── */
+.fi-btn.fi-color-primary {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+    border-radius: 0.625rem !important;
+}
+
+.fi-btn.fi-color-primary:hover {
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.45);
+}
+
+/* ─── Login ─── */
+.fi-simple-layout {
+    background: linear-gradient(135deg, #ede9fe 0%, #f1f5f9 45%, #fce7f3 100%) !important;
+}
+
+.fi-simple-layout .fi-simple-main-ctn {
+    min-height: 100vh;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fi-simple-main {
+    width: 100%;
+    max-width: 30rem;
+    border-radius: 0;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.fi-simple-page {
+    background: transparent !important;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.fi-simple-page-content {
+    padding: 2rem 1.75rem !important;
+    border-radius: 1.25rem !important;
+    border: 2px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    box-shadow: 0 24px 60px rgba(49, 46, 129, 0.16) !important;
+}
+
+.codflow-auth-brand {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.75rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 45%, #ec4899 100%);
+    box-shadow: 0 16px 40px rgba(124, 58, 237, 0.28);
+    color: #ffffff;
+}
+
+@media (min-width: 1024px) {
+    .fi-simple-main {
+        max-width: 76rem !important;
+    }
+
+    .fi-simple-page {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 2rem;
+        align-items: stretch;
+    }
+
+    .codflow-auth-brand {
+        padding: 2.5rem;
+        min-height: 100%;
+    }
+}
+
+.codflow-auth-brand__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 0.875rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.25rem;
+}
+
+.codflow-auth-brand__title {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.codflow-auth-brand__text {
+    margin-top: 0.75rem;
+    max-width: 28rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.codflow-auth-brand__features {
+    margin-top: 2rem;
+    display: grid;
+    gap: 0.875rem;
+    list-style: none;
+    padding: 0;
+}
+
+.codflow-auth-brand__features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.codflow-auth-brand__icon {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    flex-shrink: 0;
+}
+
+.fi-simple-header-heading {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.02em;
+}
+
+.fi-simple-header-subheading {
+    color: #475569 !important;
+    font-size: 0.9375rem !important;
+    line-height: 1.5;
+}
+
+.fi-simple-page .fi-input-wrp {
+    border-radius: 0.75rem;
+    border-color: #cbd5e1;
+}
+
+.fi-simple-page .fi-input-wrp:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.fi-simple-page .fi-btn.fi-color-primary {
+    width: 100%;
+    justify-content: center;
+    padding-block: 0.8rem;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* ─── Footer ─── */
+.codflow-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem 1.5rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* ─── RTL ─── */
+[dir='rtl'] .fi-sidebar .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn:hover {
+    transform: translateX(-2px);
+}
+
+/* ═══════════════════════════════════════════
+   Responsive — mobile & tablette
+   ═══════════════════════════════════════════ */
+
+.fi-main-ctn {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.fi-page-content {
+    gap: 1rem !important;
+}
+
+.fi-wi-stats-overview {
+    width: 100%;
+}
+
+.fi-page-dashboard .fi-wi-widget,
+.fi-page-dashboard .fi-grid-col {
+    min-width: 0;
+    width: 100%;
+}
+
+.fi-wi-stats-overview-stat {
+    min-width: 0;
+}
+
+.fi-ta-ctn {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fi-wi-chart,
+.fi-wi-chart > div {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.fi-wi-chart canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+.fi-header-actions-ctn,
+.fi-page-header-actions-ctn {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.fi-section-content-ctn {
+    overflow-x: auto;
+}
+
+.fi-infolist-ctn {
+    overflow-x: auto;
+}
+
+@media (max-width: 639px) {
+    .fi-page-dashboard .fi-sc.fi-grid > .fi-grid-col {
+        grid-column: 1 / -1 !important;
+    }
+
+    .fi-page-dashboard .fi-wi-widget {
+        max-width: 100%;
+    }
+
+    .codflow-dashboard-banner__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem 1.125rem;
+    }
+
+    .codflow-dashboard-banner__title {
+        font-size: 1.125rem;
+    }
+
+    .codflow-dashboard-banner__date {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .fi-wi-stats-overview-stat {
+        padding: 0.875rem 1rem !important;
+    }
+
+    .fi-wi-stats-overview-stat-value {
+        font-size: 1.25rem !important;
+        padding-right: 2.75rem;
+    }
+
+    .fi-wi-stats-overview-stat-icon-ctn {
+        top: 0.75rem !important;
+        right: 0.75rem !important;
+    }
+
+    .fi-wi-stats-overview-stat-icon {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+
+    .fi-main-ctn {
+        padding-inline: 0.75rem !important;
+    }
+
+    .fi-page-dashboard .fi-page-main {
+        padding-inline: 0 !important;
+    }
+
+    .codflow-panel__header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .codflow-list-item {
+        padding: 0.625rem 1rem;
+    }
+
+    .codflow-footer {
+        flex-direction: column;
+        text-align: center;
+        padding-inline: 1rem;
+    }
+
+    .fi-simple-page-content {
+        padding: 1.25rem 1rem !important;
+    }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+    .fi-wi-stats-overview-stat-value {
+        font-size: 1.375rem !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    .codflow-confirmation-actions-grid .fi-ac {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .codflow-confirmation-actions-grid .fi-ac {
+        grid-template-columns: 1fr;
+    }
+}
+
+.codflow-fulfillment-actions-grid.fi-sc-actions,
+.codflow-fulfillment-actions-grid {
+    width: 100%;
+}
+
+.codflow-fulfillment-actions-grid .fi-ac {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+    width: 100%;
+}
+
+.codflow-fulfillment-actions-grid .fi-ac .fi-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.75rem;
+}
+
+.codflow-confirmation-actions-grid.fi-sc-actions,
+.codflow-confirmation-actions-grid {
+    width: 100%;
+}
+
+.codflow-confirmation-actions-grid .fi-ac {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.625rem;
+    width: 100%;
+}
+
+.codflow-confirmation-actions-grid .fi-ac .codflow-confirmation-action-btn,
+.codflow-confirmation-actions-grid .fi-ac .fi-ac-btn-action {
+    width: 100%;
+}
+
+.codflow-confirmation-actions-grid .fi-ac .fi-btn {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+    min-height: 2.75rem;
+    height: auto;
+    padding-block: 0.5rem;
+}
+
+@media (max-width: 1023px) {
+    .fi-wi-chart .fi-section-header-ctn {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+}

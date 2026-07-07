@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Messages;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\Messages\Pages\CreateMessage;
 use App\Filament\Resources\Messages\Pages\EditMessage;
 use App\Filament\Resources\Messages\Pages\ListMessages;
@@ -15,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class MessageResource extends Resource
@@ -45,6 +47,21 @@ class MessageResource extends Resource
     public static function table(Table $table): Table
     {
         return MessagesTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()->with(['conversation', 'sender', 'recipient']);
+        $user = auth()->user();
+
+        if (! $user || in_array($user->role, [UserRole::Admin, UserRole::Manager], true)) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $inner) use ($user): void {
+            $inner->where('sender_id', $user->id)
+                ->orWhere('recipient_id', $user->id);
+        });
     }
 
     public static function getRelations(): array

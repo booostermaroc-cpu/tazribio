@@ -63,7 +63,7 @@ class RolePermission
         $allowed = $user->allowed_resources;
 
         if (! is_array($allowed) || $allowed === []) {
-            return true;
+            return in_array($resource, self::defaultResourcesForRole($user->role), true);
         }
 
         return in_array($resource, $allowed, true);

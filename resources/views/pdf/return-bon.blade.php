@@ -12,7 +12,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="title">{{ $settings->company_name ?? 'CODFlow' }}</div>
+        <div class="title">{{ $settings->company_name ?? 'Tazri Bio' }}</div>
         <div>Bon de retour — {{ $returnBon->return_number }}</div>
         <div>Commande : {{ $order?->order_number }}</div>
         <div>Client : {{ $order?->client?->full_name }} — {{ $order?->client?->phone }}</div>

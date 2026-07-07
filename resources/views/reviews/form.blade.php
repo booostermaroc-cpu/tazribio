@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ __('codflow.review.form_title') }} — {{ config('app.name', 'CODFlow') }}</title>
+    <title>{{ __('codflow.review.form_title') }} — {{ config('app.name', 'Tazri Bio') }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -123,7 +123,7 @@
             <button type="submit">{{ __('codflow.review.submit') }}</button>
         </form>
 
-        <p class="brand">{{ config('app.name', 'CODFlow') }}</p>
+        <p class="brand">{{ config('app.name', 'Tazri Bio') }}</p>
     </div>
 </body>
 </html>

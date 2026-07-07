@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'brand' => 'CODFlow',
+    'brand' => 'Tazri Bio',
 
     'nav' => [
         'groups' => [

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Messages\Schemas;
 
 use App\Filament\Support\Labels;
 use App\Models\Conversation;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -36,12 +37,17 @@ class MessageForm
                                 'created_by' => auth()->id(),
                             ])->id;
                         }),
-                    Select::make('sender_id')
-                        ->label(Labels::field('sender'))
-                        ->relationship('sender', 'name', fn ($query) => $query->orderBy('name'))
+                    Hidden::make('sender_id')
+                        ->default(fn () => auth()->id())
+                        ->dehydrated(),
+                    Select::make('recipient_id')
+                        ->label(__('codflow.fields.recipient'))
+                        ->relationship('recipient', 'name', fn ($query) => $query
+                            ->where('is_active', true)
+                            ->whereKeyNot(auth()->id())
+                            ->orderBy('name'))
                         ->searchable()
                         ->preload()
-                        ->default(fn () => auth()->id())
                         ->required(),
                     Textarea::make('message')
                         ->label(Labels::field('message'))

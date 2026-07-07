@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 
 class SettingService
@@ -10,7 +11,7 @@ class SettingService
     public static function get(): Setting
     {
         return Setting::query()->firstOrCreate([], [
-            'company_name' => 'CODFlow',
+            'company_name' => 'Tazri Bio',
             'default_delivery_fee' => 30,
             'carrier_fee_rules' => CarrierFeeService::defaultRules(),
             'order_prefix' => 'ORD',
@@ -27,12 +28,18 @@ class SettingService
             return null;
         }
 
-        if (Storage::disk('public')->exists($logo)) {
-            return Storage::disk('public')->url($logo);
+        /** @var FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk('public');
+
+        if ($publicDisk->exists($logo)) {
+            return $publicDisk->url($logo);
         }
 
-        if (Storage::disk('local')->exists($logo)) {
-            return Storage::disk('local')->url($logo);
+        /** @var FilesystemAdapter $localDisk */
+        $localDisk = Storage::disk('local');
+
+        if ($localDisk->exists($logo)) {
+            return $localDisk->url($logo);
         }
 
         return asset('storage/'.$logo);

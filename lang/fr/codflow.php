@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'brand' => 'CODFlow',
+    'brand' => 'Tazri Bio',
 
     'nav' => [
         'groups' => [
@@ -404,12 +404,12 @@ return [
     ],
 
     'auth' => [
-        'login_title' => 'Connexion',
-        'login_subtitle' => 'Accédez à votre espace de gestion COD',
-        'brand_message' => 'Pilotez vos colis, stocks et livraisons depuis une interface unique.',
-        'feature_orders' => 'Suivi des colis en temps réel',
-        'feature_stock' => 'Gestion des stocks et alertes',
-        'feature_dashboard' => 'Tableau de bord et statistiques',
+        'login_title' => 'Bienvenue chez Tazri Bio',
+        'login_subtitle' => 'Connectez-vous pour gérer vos colis, commandes, stocks et livraisons.',
+        'brand_message' => 'Une interface claire pour suivre vos ventes, vos produits bio et vos expéditions Ameex sans perdre de temps.',
+        'feature_orders' => 'Colis et commandes centralisés',
+        'feature_stock' => 'Stock produit suivi en temps réel',
+        'feature_dashboard' => 'Pilotage simple de votre activité',
     ],
 
     'products' => [
@@ -513,6 +513,7 @@ return [
         'attachment' => 'Pièce jointe',
         'conversation' => 'Conversation',
         'sender' => 'Expéditeur',
+        'recipient' => 'Envoyer à',
         'expected_payment_date' => 'Date de paiement prévue',
         'received_at' => 'Reçu le',
         'warehouse' => 'Entrepôt',
@@ -575,6 +576,14 @@ return [
     'users' => [
         'allowed_pages' => 'Pages accessibles',
         'allowed_pages_help' => 'Cochez les modules que cet utilisateur peut voir. L\'administrateur a toujours accès à tout.',
+        'allowed_pages_hint' => 'Si aucune page personnalisée n\'est cochée, les pages par défaut du rôle seront utilisées.',
+        'admin_permissions_help' => 'Un administrateur garde toujours accès à tous les modules.',
+        'default_permissions' => 'Par défaut du rôle',
+        'password_help' => 'Obligatoire à la création. Laissez vide en modification pour conserver le mot de passe actuel.',
+    ],
+
+    'messages' => [
+        'read' => 'Lu',
     ],
 
     'clients' => [

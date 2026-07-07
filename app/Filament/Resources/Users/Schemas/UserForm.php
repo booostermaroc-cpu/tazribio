@@ -13,6 +13,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
@@ -63,8 +64,11 @@ class UserForm
                         TextInput::make('password')
                             ->label(Labels::field('password'))
                             ->password()
+                            ->revealable()
+                            ->autocomplete('new-password')
                             ->dehydrated(fn (?string $state) => filled($state))
-                            ->required(fn (string $operation): bool => $operation === 'create'),
+                            ->required(fn (string $operation): bool => $operation === 'create')
+                            ->helperText(__('codflow.users.password_help')),
                     ])
                     ->columns(2)
                     ->columnSpanFull(),
@@ -76,7 +80,19 @@ class UserForm
                             ->options(AppResource::options())
                             ->columns(2)
                             ->bulkToggleable()
-                            ->default(fn () => RolePermission::defaultResourcesForRole(UserRole::Agent)),
+                            ->default(fn () => RolePermission::defaultResourcesForRole(UserRole::Agent))
+                            ->afterStateHydrated(function (?array $state, Set $set, Get $get): void {
+                                if (is_array($state) && $state !== []) {
+                                    return;
+                                }
+
+                                $role = UserRole::tryFrom((string) ($get('role') ?? UserRole::Agent->value)) ?? UserRole::Agent;
+
+                                $set('allowed_resources', RolePermission::defaultResourcesForRole($role));
+                            })
+                            ->helperText(fn (Get $get): string => UserRole::tryFrom((string) $get('role')) === UserRole::Admin
+                                ? __('codflow.users.admin_permissions_help')
+                                : __('codflow.users.allowed_pages_hint')),
                     ])
                     ->visible(fn (): bool => auth()->user()?->role === UserRole::Admin)
                     ->columnSpanFull(),

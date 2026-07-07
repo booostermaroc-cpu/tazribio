@@ -35,7 +35,7 @@
             @if($logoPath)
                 <img src="{{ $logoPath }}" alt="Logo" style="max-height: 60px; margin-bottom: 8px;">
             @endif
-            <div class="title">{{ $settings->company_name ?? 'CODFlow' }}</div>
+            <div class="title">{{ $settings->company_name ?? 'Tazri Bio' }}</div>
             @if($settings->phone)<div>{{ $settings->phone }}</div>@endif
             @if($settings->address)<div class="muted">{{ $settings->address }}</div>@endif
             @if($settings->rib)<div class="muted">RIB: {{ $settings->rib }}</div>@endif
@@ -107,7 +107,7 @@
     @endif
 
     <div class="footer">
-        Document généré par CODFlow — {{ now()->format('d/m/Y H:i') }}
+        Document généré par Tazri Bio — {{ now()->format('d/m/Y H:i') }}
     </div>
 </body>
 </html>

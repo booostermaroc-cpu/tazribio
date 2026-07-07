@@ -9,6 +9,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class MessagesTable
@@ -25,6 +26,10 @@ class MessagesTable
                 TextColumn::make('sender.name')
                     ->label(Labels::field('sender'))
                     ->searchable(),
+                TextColumn::make('recipient.name')
+                    ->label(__('codflow.fields.recipient'))
+                    ->searchable()
+                    ->placeholder('—'),
                 TextColumn::make('message')
                     ->label(Labels::field('message'))
                     ->searchable()
@@ -35,6 +40,14 @@ class MessagesTable
                     ->boolean()
                     ->trueIcon('heroicon-o-paper-clip')
                     ->falseIcon('heroicon-o-minus'),
+                IconColumn::make('read_at')
+                    ->label(__('codflow.messages.read'))
+                    ->boolean()
+                    ->state(fn ($record): bool => filled($record->read_at))
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-envelope')
+                    ->trueColor('success')
+                    ->falseColor('warning'),
                 TextColumn::make('created_at')
                     ->label(Labels::field('created_at'))
                     ->dateTime()
@@ -51,6 +64,14 @@ class MessagesTable
                     ->relationship('sender', 'name')
                     ->searchable()
                     ->preload(),
+                SelectFilter::make('recipient_id')
+                    ->label(__('codflow.fields.recipient'))
+                    ->relationship('recipient', 'name')
+                    ->searchable()
+                    ->preload(),
+                TernaryFilter::make('read_at')
+                    ->label(__('codflow.messages.read'))
+                    ->nullable(),
             ])
             ->recordActions([EditAction::make()])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);

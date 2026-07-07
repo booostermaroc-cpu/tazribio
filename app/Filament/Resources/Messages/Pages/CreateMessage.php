@@ -8,4 +8,11 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateMessage extends CreateRecord
 {
     protected static string $resource = MessageResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['sender_id'] = auth()->id();
+
+        return $data;
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Support;
 
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 
 class Labels
@@ -22,6 +23,8 @@ class Labels
         'creator.name' => 'created_by',
         'sender.name' => 'sender',
         'sender_id' => 'sender',
+        'recipient.name' => 'recipient',
+        'recipient_id' => 'recipient',
         'changedBy.name' => 'changed_by',
         'user.name' => 'user',
         'user_id' => 'user',
@@ -56,7 +59,7 @@ class Labels
 
     public static function has(string $key): bool
     {
-        return trans()->has("codflow.fields.{$key}");
+        return Lang::has("codflow.fields.{$key}");
     }
 
     public static function resolve(?string $name): ?string

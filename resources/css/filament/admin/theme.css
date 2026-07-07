@@ -4,7 +4,7 @@
 @source '../../../../resources/views/filament/**/*';
 
 /* ═══════════════════════════════════════════
-   CODFlow — Mockup UI Theme
+   Tazri Bio — Admin UI Theme
    ═══════════════════════════════════════════ */
 
 :root {
@@ -538,20 +538,52 @@
 
 /* ─── Login ─── */
 .fi-simple-layout {
-    background: linear-gradient(135deg, #ede9fe 0%, #f1f5f9 45%, #fce7f3 100%) !important;
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 12% 20%, rgba(132, 204, 22, 0.24), transparent 28rem),
+        radial-gradient(circle at 86% 12%, rgba(16, 185, 129, 0.2), transparent 24rem),
+        linear-gradient(135deg, #f7fee7 0%, #ecfdf5 45%, #f8fafc 100%) !important;
+}
+
+.fi-simple-layout::before,
+.fi-simple-layout::after {
+    content: '';
+    position: fixed;
+    pointer-events: none;
+    border-radius: 9999px;
+    filter: blur(4px);
+}
+
+.fi-simple-layout::before {
+    width: 24rem;
+    height: 24rem;
+    left: -8rem;
+    bottom: -9rem;
+    background: rgba(101, 163, 13, 0.14);
+}
+
+.fi-simple-layout::after {
+    width: 18rem;
+    height: 18rem;
+    right: -6rem;
+    top: 18%;
+    background: rgba(5, 150, 105, 0.12);
 }
 
 .fi-simple-layout .fi-simple-main-ctn {
-    min-height: 100vh;
-    padding: 1.25rem;
+    height: 100vh;
+    min-height: 0;
+    padding: clamp(0.75rem, 2vh, 1.25rem);
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 .fi-simple-main {
     width: 100%;
-    max-width: 30rem;
+    max-width: 31rem;
     border-radius: 0;
     box-shadow: none !important;
     background: transparent !important;
@@ -561,80 +593,125 @@
     background: transparent !important;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: clamp(0.75rem, 1.8vh, 1.25rem);
+    max-height: calc(100vh - 2rem);
 }
 
 .fi-simple-page-content {
-    padding: 2rem 1.75rem !important;
-    border-radius: 1.25rem !important;
-    border: 2px solid #e2e8f0 !important;
-    background: #ffffff !important;
-    box-shadow: 0 24px 60px rgba(49, 46, 129, 0.16) !important;
+    position: relative;
+    padding: clamp(1.25rem, 3vh, 2rem) clamp(1.25rem, 2.5vw, 2rem) !important;
+    border-radius: 1.75rem !important;
+    border: 1px solid rgba(148, 163, 184, 0.28) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.16) !important;
+    backdrop-filter: blur(18px);
+}
+
+.fi-simple-page-content::before {
+    content: '';
+    position: absolute;
+    inset: 0.65rem 0.65rem auto 0.65rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #65a30d, #10b981, #f59e0b);
 }
 
 .codflow-auth-brand {
+    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 1.75rem;
-    border-radius: 1.25rem;
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 45%, #ec4899 100%);
-    box-shadow: 0 16px 40px rgba(124, 58, 237, 0.28);
+    justify-content: space-between;
+    gap: clamp(1rem, 2.5vh, 1.75rem);
+    padding: clamp(1.35rem, 3vh, 1.75rem);
+    border-radius: 1.75rem;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 82% 18%, rgba(253, 224, 71, 0.24), transparent 16rem),
+        linear-gradient(135deg, #14532d 0%, #166534 42%, #047857 100%);
+    box-shadow: 0 24px 60px rgba(20, 83, 45, 0.28);
     color: #ffffff;
+}
+
+.codflow-auth-brand::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.12), transparent 38%),
+        radial-gradient(circle at 15% 85%, rgba(187, 247, 208, 0.18), transparent 18rem);
+}
+
+.codflow-auth-brand > * {
+    position: relative;
+    z-index: 1;
 }
 
 @media (min-width: 1024px) {
     .fi-simple-main {
-        max-width: 76rem !important;
+        max-width: 78rem !important;
     }
 
     .fi-simple-page {
         display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        gap: 2rem;
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+        gap: clamp(1rem, 2vw, 1.5rem);
         align-items: stretch;
     }
 
     .codflow-auth-brand {
-        padding: 2.5rem;
-        min-height: 100%;
+        min-height: 0;
+        height: 100%;
+        padding: clamp(1.5rem, 4vh, 2.25rem);
     }
+}
+
+.codflow-auth-brand__top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .codflow-auth-brand__badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    font-size: 0.875rem;
-    font-weight: 800;
+    width: clamp(3rem, 6vh, 4rem);
+    height: clamp(3rem, 6vh, 4rem);
+    border-radius: clamp(0.9rem, 2vh, 1.25rem);
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    font-size: 1rem;
+    font-weight: 900;
     letter-spacing: 0.08em;
-    margin-bottom: 1.25rem;
+}
+
+.codflow-auth-brand__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #bbf7d0;
 }
 
 .codflow-auth-brand__title {
-    font-size: 2rem;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    margin-top: 0.2rem;
+    font-size: clamp(2rem, 4.2vw, 3.45rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.06em;
 }
 
 .codflow-auth-brand__text {
-    margin-top: 0.75rem;
-    max-width: 28rem;
-    font-size: 0.9375rem;
-    line-height: 1.6;
+    max-width: 34rem;
+    font-size: clamp(0.95rem, 1.25vw, 1.08rem);
+    line-height: 1.55;
     color: rgba(255, 255, 255, 0.9);
 }
 
 .codflow-auth-brand__features {
-    margin-top: 2rem;
     display: grid;
-    gap: 0.875rem;
+    gap: clamp(0.55rem, 1.4vh, 0.875rem);
     list-style: none;
     padding: 0;
 }
@@ -642,50 +719,89 @@
 .codflow-auth-brand__features li {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
+    gap: 0.85rem;
+    padding: clamp(0.6rem, 1.45vh, 0.875rem) 1rem;
+    border-radius: 1rem;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.18);
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.92rem;
+    font-weight: 650;
 }
 
 .codflow-auth-brand__icon {
     width: 1.25rem !important;
     height: 1.25rem !important;
     flex-shrink: 0;
+    color: #bef264;
+}
+
+.codflow-auth-brand__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.codflow-auth-brand__stats div {
+    padding: clamp(0.65rem, 1.6vh, 1rem);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.codflow-auth-brand__stats strong,
+.codflow-auth-brand__stats span {
+    display: block;
+}
+
+.codflow-auth-brand__stats strong {
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.codflow-auth-brand__stats span {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.78);
 }
 
 .fi-simple-header-heading {
-    font-size: 1.75rem !important;
-    font-weight: 800 !important;
+    font-size: clamp(1.5rem, 3.5vh, 2rem) !important;
+    font-weight: 900 !important;
     color: #0f172a !important;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
 }
 
 .fi-simple-header-subheading {
     color: #475569 !important;
-    font-size: 0.9375rem !important;
-    line-height: 1.5;
+    font-size: 0.92rem !important;
+    line-height: 1.45;
 }
 
 .fi-simple-page .fi-input-wrp {
-    border-radius: 0.75rem;
-    border-color: #cbd5e1;
+    border-radius: 1rem;
+    border-color: #d1d5db;
+    background: #ffffff;
 }
 
 .fi-simple-page .fi-input-wrp:focus-within {
-    border-color: #7c3aed;
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+    border-color: #16a34a;
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.14);
 }
 
 .fi-simple-page .fi-btn.fi-color-primary {
     width: 100%;
     justify-content: center;
-    padding-block: 0.8rem;
-    font-weight: 700;
+    padding-block: clamp(0.7rem, 1.7vh, 0.9rem);
+    border-radius: 1rem !important;
+    background: linear-gradient(135deg, #16a34a, #15803d) !important;
+    box-shadow: 0 12px 26px rgba(22, 163, 74, 0.28);
+    font-weight: 800;
     font-size: 1rem;
+}
+
+.fi-simple-page .fi-btn.fi-color-primary:hover {
+    box-shadow: 0 16px 34px rgba(22, 163, 74, 0.36);
+    transform: translateY(-1px);
 }
 
 /* ─── Footer ─── */
@@ -829,6 +945,41 @@
 
     .fi-simple-page-content {
         padding: 1.25rem 1rem !important;
+    }
+
+    .codflow-auth-brand {
+        padding: 1.35rem;
+        border-radius: 1.25rem;
+        gap: 1.25rem;
+    }
+
+    .codflow-auth-brand__top {
+        align-items: flex-start;
+    }
+
+    .codflow-auth-brand__badge {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.9rem;
+    }
+
+    .codflow-auth-brand__stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-height: 760px) and (min-width: 1024px) {
+    .codflow-auth-brand__stats {
+        display: none;
+    }
+
+    .codflow-auth-brand__features {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .codflow-auth-brand__features li {
+        align-items: flex-start;
+        font-size: 0.8rem;
     }
 }
 

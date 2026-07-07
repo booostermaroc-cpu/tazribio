@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Enums\CommissionApplyOn;
 use App\Enums\CommissionType;
 use App\Enums\UserRole;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable;
 
@@ -51,6 +53,11 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'created_by');
     }
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return (bool) $this->is_active;
+    }
+
     public function clientNotes(): HasMany
     {
         return $this->hasMany(ClientNote::class);
@@ -89,6 +96,11 @@ class User extends Authenticatable
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'recipient_id');
     }
 
     public function commissions(): HasMany

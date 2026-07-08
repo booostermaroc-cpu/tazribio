@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DeliveryCompanies\Pages;
 
 use App\Enums\DeliveryProvider;
+use App\Filament\Resources\DeliveryCompanies\Concerns\InteractsWithAmeexBusinessIdForm;
 use App\Filament\Resources\DeliveryCompanies\DeliveryCompanyResource;
 use App\Filament\Support\AmeexNotifications;
 use App\Models\DeliveryCompany;
@@ -15,6 +16,8 @@ use Filament\Support\Icons\Heroicon;
 
 class EditDeliveryCompany extends EditRecord
 {
+    use InteractsWithAmeexBusinessIdForm;
+
     protected static string $resource = DeliveryCompanyResource::class;
 
     protected function getHeaderActions(): array

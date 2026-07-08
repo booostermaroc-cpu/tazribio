@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Shipments\Pages;
 
 use App\Enums\DeliveryProvider;
 use App\Filament\Resources\Shipments\ShipmentResource;
+use App\Filament\Support\AmeexActionMessages;
 use App\Filament\Support\AmeexNotifications;
 use App\Models\Shipment;
 use App\Services\DeliveryIntegrationService;
@@ -26,7 +27,9 @@ class EditShipment extends EditRecord
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('success')
                 ->requiresConfirmation()
-                ->modalDescription(__('codflow.delivery.ameex_stock_confirm'))
+                ->modalHeading(__('codflow.delivery.send_order_ameex'))
+                ->modalDescription(AmeexActionMessages::stockSendConfirm())
+                ->modalSubmitActionLabel('Confirmer')
                 ->visible(fn (Shipment $record) => $record->deliveryCompany?->provider === DeliveryProvider::Ameex
                     && $record->order !== null)
                 ->action(function (Shipment $record): void {

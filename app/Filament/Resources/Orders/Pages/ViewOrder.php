@@ -9,6 +9,7 @@ use App\Exceptions\InvalidOrderTransitionException;
 use App\Exceptions\OrderValidationException;
 use App\Filament\Resources\Orders\Concerns\InteractsWithOrderConfirmationProcess;
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Support\AmeexActionMessages;
 use App\Filament\Support\AmeexNotifications;
 use App\Models\Order;
 use App\Services\ConfirmationTrackingService;
@@ -25,6 +26,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Log;
 
 class ViewOrder extends ViewRecord
 {
@@ -51,7 +53,9 @@ class ViewOrder extends ViewRecord
                     ->label(__('codflow.delivery.send_action'))
                     ->icon(Heroicon::OutlinedPaperAirplane)
                     ->requiresConfirmation()
-                    ->modalDescription(__('codflow.delivery.ameex_stock_confirm'))
+                    ->modalHeading(__('codflow.delivery.send_action'))
+                    ->modalDescription(AmeexActionMessages::stockSendConfirm())
+                    ->modalSubmitActionLabel('Confirmer')
                     ->visible(fn (Order $record) => ! $record->shipments()
                         ->where(function ($query): void {
                             $query->where(function ($inner): void {
@@ -185,8 +189,21 @@ class ViewOrder extends ViewRecord
 
     protected function sendToCarrier(Order $record): void
     {
-        AmeexNotifications::notify(app(DeliveryIntegrationService::class)->sendOrderToCarrier($record));
-        $this->record->refresh();
+        try {
+            AmeexNotifications::notify(app(DeliveryIntegrationService::class)->sendOrderToCarrier($record));
+            $this->record->refresh();
+        } catch (\Throwable $exception) {
+            Log::error('Ameex sendToCarrier failed', [
+                'order_id' => $record->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            Notification::make()
+                ->title(__('codflow.notifications.error'))
+                ->body($exception->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     protected function refreshTracking(Order $record): void

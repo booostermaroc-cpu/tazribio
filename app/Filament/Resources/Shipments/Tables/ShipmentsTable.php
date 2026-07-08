@@ -6,6 +6,7 @@ use App\Enums\DeliveryProvider;
 use App\Enums\ShipmentStatus;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Shipments\ShipmentResource;
+use App\Filament\Support\AmeexActionMessages;
 use App\Filament\Support\AmeexNotifications;
 use App\Filament\Support\EnumColumn;
 use App\Filament\Support\Labels;
@@ -53,7 +54,9 @@ class ShipmentsTable
                     ->icon('heroicon-o-paper-airplane')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->modalDescription(__('codflow.delivery.ameex_stock_confirm'))
+                    ->modalHeading(__('codflow.delivery.send_order_ameex'))
+                    ->modalDescription(AmeexActionMessages::stockSendConfirm())
+                    ->modalSubmitActionLabel('Confirmer')
                     ->visible(fn (Shipment $record): bool => $record->deliveryCompany?->provider === DeliveryProvider::Ameex
                         && $record->order !== null)
                     ->action(function (Shipment $record): void {

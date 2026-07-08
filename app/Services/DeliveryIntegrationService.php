@@ -94,12 +94,26 @@ class DeliveryIntegrationService
                 $result['raw'] ?? null,
             );
 
-            $this->notificationService->orderSentToDelivery($order, $company);
+            try {
+                $this->notificationService->orderSentToDelivery($order, $company);
+            } catch (\Throwable $exception) {
+                Log::warning('orderSentToDelivery notification failed', [
+                    'order_id' => $order->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
 
             return ['success' => true, 'message' => $result['message']];
         }
 
-        $this->notificationService->deliveryApiError($order, $result['message']);
+        try {
+            $this->notificationService->deliveryApiError($order, $result['message']);
+        } catch (\Throwable $exception) {
+            Log::warning('deliveryApiError notification failed', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
 
         if (isset($result['raw'])) {
             $shipment->update(['ameex_raw_response' => $result['raw']]);

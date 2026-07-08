@@ -44,6 +44,15 @@ class EditDeliveryCompany extends EditRecord
                     AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncCities($record));
                     $this->record->refresh();
                 }),
+            Action::make('syncAmeexBusinesses')
+                ->label(__('codflow.delivery.ameex_sync_businesses'))
+                ->icon(Heroicon::OutlinedBuildingOffice2)
+                ->visible(fn (DeliveryCompany $record) => $record->provider === DeliveryProvider::Ameex)
+                ->action(function (DeliveryCompany $record): void {
+                    AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncBusinesses($record));
+                    $this->record->refresh();
+                    $this->fillForm();
+                }),
             Action::make('testAmeexProducts')
                 ->label(__('codflow.delivery.ameex_test_products'))
                 ->icon(Heroicon::OutlinedCube)

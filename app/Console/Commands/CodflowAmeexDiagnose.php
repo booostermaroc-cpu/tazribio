@@ -63,6 +63,22 @@ class CodflowAmeexDiagnose extends Command
             $this->error('Clé API absente en base. Ré-enregistrez C-Api-Key dans Transporteurs → AMEEX.');
         }
 
+        $businessesMap = is_array($settings['ameex_businesses_map'] ?? null) ? $settings['ameex_businesses_map'] : [];
+
+        if ($businessesMap !== []) {
+            $this->newLine();
+            $this->line('Expéditeurs Ameex synchronisés :');
+            foreach ($businessesMap as $id => $name) {
+                $this->line("  - {$id} => {$name}");
+            }
+        }
+
+        if (blank($settings['business_id'] ?? null)) {
+            $this->warn('business_id manquant : cliquez « Synchroniser les expéditeurs » ou renseignez-le depuis Ameex → Mes entreprises.');
+        } elseif (($settings['business_id'] ?? null) === $company->api_username) {
+            $this->warn('business_id est identique au C-Api-Id. Utilisez l\'ID expéditeur Ameex (Mes entreprises), pas l\'ID API.');
+        }
+
         $this->newLine();
         $this->line('Test réseau direct (curl Laravel)...');
 

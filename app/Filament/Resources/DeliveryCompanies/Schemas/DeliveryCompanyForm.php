@@ -49,6 +49,10 @@ class DeliveryCompanyForm
                         ->autocomplete('new-password')
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->helperText(__('codflow.delivery.ameex_api_key_help')),
+                    TextInput::make('api_settings.business_id')
+                        ->label(__('codflow.delivery.ameex_business_id'))
+                        ->helperText(__('codflow.delivery.ameex_business_id_help'))
+                        ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value),
                     KeyValue::make('api_settings')
                         ->label(__('codflow.ui.api_settings'))
                         ->keyLabel(__('codflow.ui.key'))

@@ -66,7 +66,88 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return $this->sanitizeCredential((string) $businessId);
         }
 
-        return $this->apiId($company);
+        return null;
+    }
+
+    /** @return list<string> */
+    public function suggestedBusinessesPaths(DeliveryCompany $company): array
+    {
+        $configured = trim($this->path($company, 'businesses_list_path', ''));
+
+        return array_values(array_unique(array_filter([
+            $configured !== '' ? $configured : null,
+            '/customer/Delivery/Businesses',
+            '/customer/Delivery/MyBusinesses',
+            '/customer/Delivery/Hubs',
+            '/customer/Delivery/Stocks/Hubs',
+            '/customer/Delivery/Business',
+            '/customer/Businesses',
+        ])));
+    }
+
+    /** @return array{success: bool, businesses?: array<string, string>, message: string, raw?: array<string, mixed>|null} */
+    public function syncBusinesses(DeliveryCompany $company): array
+    {
+        if (! $this->isConfigured($company)) {
+            return ['success' => false, 'message' => __('codflow.delivery.ameex_incomplete_config')];
+        }
+
+        $lastRaw = null;
+        $tested = [];
+
+        foreach ($this->suggestedBusinessesPaths($company) as $path) {
+            $tested[] = $path;
+
+            try {
+                $response = $this->ameexHttp($company)
+                    ->get($this->baseUrl($company).$path);
+
+                $json = $response->json() ?? [];
+                $raw = is_array($json) ? $json : ['body' => $response->body()];
+                $lastRaw = $raw;
+
+                if (! $response->successful() || AmeexResponseParser::hasApiError($raw)) {
+                    continue;
+                }
+
+                $businessesMap = AmeexResponseParser::normalizeBusinessesMap($raw);
+
+                if ($businessesMap === []) {
+                    continue;
+                }
+
+                $settings = $company->api_settings ?? [];
+                $settings['businesses_list_path'] = $path;
+                $settings['ameex_businesses'] = $raw;
+                $settings['ameex_businesses_map'] = $businessesMap;
+                $settings['ameex_businesses_synced_at'] = now()->toIso8601String();
+
+                if (blank($settings['business_id'] ?? null) && count($businessesMap) === 1) {
+                    $settings['business_id'] = (string) array_key_first($businessesMap);
+                }
+
+                $company->update(['api_settings' => $settings]);
+
+                return [
+                    'success' => true,
+                    'businesses' => $businessesMap,
+                    'message' => __('codflow.delivery.ameex_businesses_sync_success', ['count' => count($businessesMap)]),
+                    'raw' => $raw,
+                ];
+            } catch (\Throwable $exception) {
+                Log::warning('Ameex businesses sync failed', [
+                    'company_id' => $company->id,
+                    'path' => $path,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return [
+            'success' => false,
+            'message' => __('codflow.delivery.ameex_businesses_sync_failed', ['paths' => implode(', ', $tested)]),
+            'raw' => $lastRaw,
+        ];
     }
 
     public function apiKey(DeliveryCompany $company): ?string

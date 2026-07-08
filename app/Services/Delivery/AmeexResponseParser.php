@@ -151,19 +151,24 @@ class AmeexResponseParser
             return $fallback;
         }
 
+        $message = null;
         $api = $raw['api'] ?? null;
 
         if (is_array($api)) {
             foreach (['msg', 'message', 'Message'] as $key) {
                 if (filled($api[$key] ?? null) && is_string($api[$key])) {
-                    return $api[$key];
+                    $message = $api[$key];
+                    break;
                 }
             }
         }
 
-        foreach (['message', 'Message', 'error', 'msg'] as $key) {
-            if (filled($raw[$key] ?? null) && is_string($raw[$key])) {
-                return $raw[$key];
+        if ($message === null) {
+            foreach (['message', 'Message', 'error', 'msg'] as $key) {
+                if (filled($raw[$key] ?? null) && is_string($raw[$key])) {
+                    $message = $raw[$key];
+                    break;
+                }
             }
         }
 
@@ -171,7 +176,20 @@ class AmeexResponseParser
             return __('codflow.delivery.ameex_login_error');
         }
 
-        return $fallback;
+        if (is_string($message) && self::isSenderSelectionError($message)) {
+            return __('codflow.delivery.ameex_sender_required');
+        }
+
+        return $message ?? $fallback;
+    }
+
+    public static function isSenderSelectionError(string $message): bool
+    {
+        $normalized = mb_strtolower($message);
+
+        return str_contains($normalized, 'expéditeur')
+            || str_contains($normalized, 'expediteur')
+            || str_contains($normalized, 'choisir l');
     }
 
     public static function extractPickupRequestRef(mixed $raw): ?string
@@ -308,6 +326,49 @@ class AmeexResponseParser
 
             if ($cityId !== '' && $name !== '') {
                 $map[$cityId] = $name;
+            }
+        }
+
+        return $map;
+    }
+
+    /** @return array<string, string> */
+    public static function normalizeBusinessesMap(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $businesses = $raw['api']['businesses']
+            ?? $raw['api']['data']
+            ?? $raw['api']['hubs']
+            ?? $raw['businesses']
+            ?? $raw['hubs']
+            ?? $raw['data']
+            ?? $raw;
+
+        if (! is_array($businesses)) {
+            return [];
+        }
+
+        $map = [];
+
+        foreach ($businesses as $id => $business) {
+            if (is_string($business) && filled($business)) {
+                $map[(string) $id] = $business;
+
+                continue;
+            }
+
+            if (! is_array($business)) {
+                continue;
+            }
+
+            $businessId = (string) ($business['id'] ?? $business['ID'] ?? $business['business_id'] ?? $id);
+            $name = (string) ($business['name'] ?? $business['Name'] ?? $business['label'] ?? $business['title'] ?? '');
+
+            if ($businessId !== '' && $name !== '') {
+                $map[$businessId] = $name;
             }
         }
 

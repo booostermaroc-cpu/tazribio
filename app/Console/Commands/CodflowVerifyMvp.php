@@ -422,6 +422,7 @@ class CodflowVerifyMvp extends Command
             'api_base_url' => AmeexDeliveryService::DEFAULT_BASE_URL,
             'api_username' => 'test-api-id',
             'api_token' => 'test-api-key',
+            'api_settings' => ['business_id' => 'test-api-id'],
             'is_active' => true,
         ]);
 

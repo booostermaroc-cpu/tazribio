@@ -37,20 +37,18 @@ class CreateOrder extends CreateRecord
 
     protected function whatsAppUrl(): ?string
     {
-        $clientId = $this->data['client_id'] ?? null;
-
-        if (blank($clientId)) {
-            return null;
-        }
-
-        $client = Client::query()->find($clientId);
+        $raw = $this->form->getRawState();
+        $clientId = $raw['client_id'] ?? null;
+        $client = filled($clientId) ? Client::query()->find($clientId) : null;
+        $phone = $client?->phone ?? ($raw['client_phone'] ?? null);
+        $clientName = $client?->full_name ?? ($raw['client_full_name'] ?? null);
 
         return WhatsAppUrl::url(
-            $client?->phone,
+            $phone,
             OrderContactActions::newOrderMessage(
-                $this->data['order_number'] ?? null,
-                isset($this->data['final_amount']) ? (float) $this->data['final_amount'] : null,
-                $client?->full_name,
+                $raw['order_number'] ?? null,
+                isset($raw['final_amount']) ? (float) $raw['final_amount'] : null,
+                $clientName,
             ),
         );
     }
@@ -62,6 +60,8 @@ class CreateOrder extends CreateRecord
 
         $this->validateOrderData(array_merge($raw, ['items' => $items]));
 
+        $data['client_id'] = $this->resolveClientId($raw);
+
         $data = app(OrderCalculationService::class)->applyCalculatedAmounts(array_merge($data, [
             'items' => $items,
             'delivery_fee' => $raw['delivery_fee'] ?? $data['delivery_fee'] ?? 0,
@@ -71,6 +71,50 @@ class CreateOrder extends CreateRecord
         $data['created_by'] = auth()->id();
 
         return $data;
+    }
+
+    /** @param  array<string, mixed>  $raw */
+    protected function resolveClientId(array $raw): int
+    {
+        if (filled($raw['client_id'] ?? null)) {
+            $client = Client::query()->findOrFail($raw['client_id']);
+
+            $client->update(array_filter([
+                'full_name' => $raw['client_full_name'] ?? null,
+                'second_phone' => $raw['client_second_phone'] ?? null,
+                'city' => $raw['city'] ?? null,
+                'address' => $raw['address'] ?? null,
+            ], fn ($value) => filled($value)));
+
+            return $client->id;
+        }
+
+        $phone = preg_replace('/\s+/', '', (string) ($raw['client_phone'] ?? ''));
+
+        if (blank($raw['client_full_name'] ?? null) || blank($phone)) {
+            throw OrderValidationException::missingClient();
+        }
+
+        $client = Client::query()->firstOrCreate(
+            ['phone' => $phone],
+            [
+                'full_name' => $raw['client_full_name'],
+                'second_phone' => $raw['client_second_phone'] ?? null,
+                'city' => $raw['city'] ?? null,
+                'address' => $raw['address'] ?? null,
+            ],
+        );
+
+        if (! $client->wasRecentlyCreated) {
+            $client->update(array_filter([
+                'full_name' => $raw['client_full_name'],
+                'second_phone' => $raw['client_second_phone'] ?? null,
+                'city' => $raw['city'] ?? null,
+                'address' => $raw['address'] ?? null,
+            ], fn ($value) => filled($value)));
+        }
+
+        return $client->id;
     }
 
     /** @return array<int, array<string, mixed>> */

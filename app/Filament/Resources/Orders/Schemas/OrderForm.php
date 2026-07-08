@@ -37,22 +37,21 @@ class OrderForm
             ->components([
                 OrderConfirmationSection::make(),
                 OrderFulfillmentSection::make(),
-                Section::make(Labels::section('order'))
+                Section::make(__('codflow.order.section_client'))
                     ->schema([
-                        TextInput::make('order_number')
-                            ->label(Labels::field('order_number'))
-                            ->default(fn () => SettingService::get()->order_prefix.'-'.now()->format('Ymd').'-'.strtoupper(Str::random(4)))
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->maxLength(191),
                         Select::make('client_id')
-                            ->label(Labels::field('client'))
+                            ->label(fn (string $operation): string => $operation === 'create'
+                                ? __('codflow.order.existing_client')
+                                : Labels::field('client'))
                             ->relationship('client', 'full_name')
                             ->searchable()
                             ->preload()
-                            ->required()
                             ->live()
-                            ->afterStateUpdated(function ($state, Set $set, Get $get): void {
+                            ->required(fn (string $operation): bool => $operation === 'edit')
+                            ->helperText(fn (string $operation): ?string => $operation === 'create'
+                                ? __('codflow.order.existing_client_hint')
+                                : null)
+                            ->afterStateUpdated(function ($state, Set $set, Get $get, string $operation): void {
                                 if (! $state) {
                                     return;
                                 }
@@ -63,6 +62,16 @@ class OrderForm
                                     return;
                                 }
 
+                                if ($operation === 'create') {
+                                    $set('client_full_name', $client->full_name);
+                                    $set('client_phone', $client->phone);
+                                    $set('client_second_phone', $client->second_phone);
+                                    $set('city', $client->city);
+                                    $set('address', $client->address);
+
+                                    return;
+                                }
+
                                 if (blank($get('city')) && filled($client->city)) {
                                     $set('city', $client->city);
                                 }
@@ -70,37 +79,39 @@ class OrderForm
                                 if (blank($get('address')) && filled($client->address)) {
                                     $set('address', $client->address);
                                 }
-                            })
-                            ->createOptionForm([
-                                TextInput::make('full_name')
-                                    ->label(Labels::field('full_name'))
-                                    ->required()
-                                    ->maxLength(191),
-                                TextInput::make('phone')
-                                    ->label(Labels::field('phone'))
-                                    ->tel()
-                                    ->required()
-                                    ->maxLength(191)
-                                    ->rules([new MoroccanPhone]),
-                                TextInput::make('second_phone')
-                                    ->label(Labels::field('second_phone'))
-                                    ->tel()
-                                    ->maxLength(191)
-                                    ->rules([new MoroccanPhone]),
-                                TextInput::make('city')
-                                    ->label(Labels::field('city'))
-                                    ->maxLength(191),
-                                Textarea::make('address')
-                                    ->label(Labels::field('address'))
-                                    ->columnSpanFull(),
-                                Textarea::make('notes')
-                                    ->label(Labels::field('notes'))
-                                    ->columnSpanFull(),
-                            ])
-                            ->createOptionAction(fn ($action) => $action
-                                ->label(__('codflow.order.create_client'))
-                                ->modalHeading(__('codflow.order.create_client'))
-                                ->modalSubmitActionLabel(__('codflow.ui.add'))),
+                            }),
+                        TextInput::make('client_full_name')
+                            ->label(Labels::field('full_name'))
+                            ->maxLength(191)
+                            ->dehydrated(false)
+                            ->required(fn (string $operation, Get $get): bool => $operation === 'create' && blank($get('client_id')))
+                            ->visible(fn (string $operation): bool => $operation === 'create'),
+                        TextInput::make('client_phone')
+                            ->label(Labels::field('phone'))
+                            ->tel()
+                            ->maxLength(191)
+                            ->rules([new MoroccanPhone])
+                            ->dehydrated(false)
+                            ->required(fn (string $operation, Get $get): bool => $operation === 'create' && blank($get('client_id')))
+                            ->visible(fn (string $operation): bool => $operation === 'create'),
+                        TextInput::make('client_second_phone')
+                            ->label(Labels::field('second_phone'))
+                            ->tel()
+                            ->maxLength(191)
+                            ->rules([new MoroccanPhone])
+                            ->dehydrated(false)
+                            ->visible(fn (string $operation): bool => $operation === 'create'),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
+                Section::make(Labels::section('order'))
+                    ->schema([
+                        TextInput::make('order_number')
+                            ->label(Labels::field('order_number'))
+                            ->default(fn () => SettingService::get()->order_prefix.'-'.now()->format('Ymd').'-'.strtoupper(Str::random(4)))
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(191),
                         Select::make('status')
                             ->label(Labels::field('status'))
                             ->options(OrderStatus::options())

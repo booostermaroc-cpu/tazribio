@@ -11,6 +11,11 @@ class OrderValidationException extends Exception
         return new self(__('codflow.validation.order_no_items'));
     }
 
+    public static function missingClient(): self
+    {
+        return new self(__('codflow.validation.client_required'));
+    }
+
     public static function noShipment(): self
     {
         return new self(__('codflow.validation.order_no_shipment'));

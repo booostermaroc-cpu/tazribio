@@ -46,6 +46,8 @@ class DeliveryCompanyForm
                         ->label('C-Api-Key')
                         ->password()
                         ->revealable()
+                        ->autocomplete('new-password')
+                        ->dehydrated(fn (?string $state): bool => filled($state))
                         ->helperText(__('codflow.delivery.ameex_api_key_help')),
                     KeyValue::make('api_settings')
                         ->label(__('codflow.ui.api_settings'))

@@ -24,6 +24,26 @@ class DeliveryIntegrationService
     /** @return array{success: bool, message: string} */
     public function sendOrderToCarrier(Order $order, ?DeliveryCompany $company = null): array
     {
+        @set_time_limit(120);
+
+        try {
+            return $this->sendOrderToCarrierInternal($order, $company);
+        } catch (\Throwable $exception) {
+            Log::error('sendOrderToCarrier exception', [
+                'order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ];
+        }
+    }
+
+    /** @return array{success: bool, message: string} */
+    protected function sendOrderToCarrierInternal(Order $order, ?DeliveryCompany $company = null): array
+    {
         $company ??= $this->resolveCompany($order);
 
         if (! $company) {

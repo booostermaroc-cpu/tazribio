@@ -43,15 +43,15 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
     public function apiId(DeliveryCompany $company): ?string
     {
+        if (filled($company->api_username)) {
+            return $this->sanitizeCredential((string) $company->api_username);
+        }
+
         $settings = $company->api_settings ?? [];
         $fromSettings = $settings['api_id'] ?? null;
 
         if (filled($fromSettings)) {
             return $this->sanitizeCredential((string) $fromSettings);
-        }
-
-        if (filled($company->api_username)) {
-            return $this->sanitizeCredential((string) $company->api_username);
         }
 
         return null;

@@ -103,6 +103,10 @@ class AmeexResponseParser
             return true;
         }
 
+        if (($raw['login'] ?? null) === 'error') {
+            return true;
+        }
+
         $api = $raw['api'] ?? null;
 
         if (is_array($api) && (($api['type'] ?? null) === 'error' || ($api['Type'] ?? null) === 'error')) {
@@ -161,6 +165,10 @@ class AmeexResponseParser
             if (filled($raw[$key] ?? null) && is_string($raw[$key])) {
                 return $raw[$key];
             }
+        }
+
+        if (($raw['login'] ?? null) === 'error') {
+            return __('codflow.delivery.ameex_login_error');
         }
 
         return $fallback;

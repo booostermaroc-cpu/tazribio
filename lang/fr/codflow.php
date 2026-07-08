@@ -658,6 +658,7 @@ return [
         'sent_to_carrier' => 'Envoyé au transporteur via API.',
         'already_sent_to_carrier' => 'Ce colis est déjà envoyé au transporteur.',
         'ameex_incomplete_config' => 'Configuration API Ameex incomplète.',
+        'ameex_login_error' => 'Identifiants Ameex invalides (C-Api-Id / C-Api-Key). Vérifiez les clés dans le transporteur.',
         'ameex_business_missing' => 'ID business Ameex manquant (C-Api-Id / business_id).',
         'ameex_order_endpoint_missing' => 'Endpoint Commandes Ameex manquant. Renseignez create_order_path dans les paramètres API du transporteur.',
         'ameex_order_send_success' => 'Commande envoyée à Ameex avec succès.',

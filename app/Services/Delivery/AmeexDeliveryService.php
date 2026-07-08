@@ -147,6 +147,13 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 return ['success' => false, 'message' => __('codflow.delivery.ameex_invalid_response'), 'raw' => $json];
             }
 
+            if (AmeexResponseParser::hasApiError($json)) {
+                return $this->fail('Ameex status list auth failed', [
+                    'message' => AmeexResponseParser::extractApiMessage($json, __('codflow.delivery.ameex_login_error')),
+                    'raw' => $json,
+                ]);
+            }
+
             $settings = $company->api_settings ?? [];
             $settings['ameex_status_list'] = $json;
             $settings['ameex_status_list_synced_at'] = now()->toIso8601String();

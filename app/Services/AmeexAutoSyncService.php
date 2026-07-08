@@ -36,12 +36,11 @@ class AmeexAutoSyncService
 
             if (! $connection['success']) {
                 $errors[] = "{$company->name}: ".$connection['message'];
-                Log::warning('Ameex auto-sync connection failed', ['company_id' => $company->id, 'message' => $connection['message']]);
-
-                continue;
-            }
-
-            if ($this->shouldSyncReferenceData($company)) {
+                Log::warning('Ameex auto-sync connection test failed', [
+                    'company_id' => $company->id,
+                    'message' => $connection['message'],
+                ]);
+            } elseif ($this->shouldSyncReferenceData($company)) {
                 $statuses = $this->ameex->getParcelStatuses($company);
 
                 if (! $statuses['success']) {

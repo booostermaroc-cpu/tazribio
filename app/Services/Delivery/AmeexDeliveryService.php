@@ -131,8 +131,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         try {
             $path = $this->path($company, 'status_list_path', self::PATH_STATUS_LIST);
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->get($this->baseUrl($company).$path);
 
             $json = $response->json() ?? [];
@@ -178,8 +177,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $tested[] = $path;
 
             try {
-                $response = Http::timeout(30)
-                    ->withHeaders($this->authHeaders($company, false))
+                $response = $this->ameexHttp($company)
                     ->get($this->baseUrl($company).$path);
 
                 $json = $response->json() ?? [];
@@ -290,8 +288,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $path = $this->path($company, 'relaunch_parcel_path', self::PATH_RELAUNCH);
             $url = $this->baseUrl($company).$path.'?ParcelCode='.urlencode($parcelCode);
 
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->get($url);
 
             $json = $response->json() ?? [];
@@ -331,8 +328,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $path = $this->path($company, 'relaunch_new_parcel_path', self::PATH_RELAUNCH_NEW);
             $url = $this->baseUrl($company).$path.'?ParcelCode='.urlencode($parcelCode);
 
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->asMultipart()
                 ->post($url, [
                     ['name' => 'order_num', 'contents' => (string) ($customerData['order_num'] ?? '')],
@@ -373,8 +369,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         $path = $this->path($company, 'cities_list_path', '/customer/Delivery/Cities');
 
         try {
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->get($this->baseUrl($company).$path);
 
             $json = $response->json() ?? [];
@@ -435,8 +430,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         }
 
         try {
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->get($this->buildDeliveryNotePrintUrl($company, $reference));
 
             $json = $response->json();
@@ -491,8 +485,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         try {
             $url = rtrim($this->baseUrl($company), '/').'/customer/Delivery/PickupRequests/Action/Type/Add';
 
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->asMultipart()
                 ->post($url, [
                     ['name' => 'mdl_business', 'contents' => $businessId],
@@ -578,8 +571,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ]);
             }
 
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->asMultipart()
                 ->post($this->baseUrl($company).$path, $multipart);
 
@@ -673,8 +665,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ]);
             }
 
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->asMultipart()
                 ->post($this->baseUrl($company).$path, $multipart);
 
@@ -981,8 +972,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         try {
             $path = $this->path($company, $pathKey, $defaultPath);
 
-            $response = Http::timeout(30)
-                ->withHeaders($this->authHeaders($company, false))
+            $response = $this->ameexHttp($company)
                 ->asMultipart()
                 ->post($this->baseUrl($company).$path, [
                     ['name' => 'codes', 'contents' => implode(',', $codes)],
@@ -1019,6 +1009,14 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         return rtrim((string) ($company->api_base_url ?: $company->api_url ?: self::DEFAULT_BASE_URL), '/');
     }
 
+    protected function ameexHttp(DeliveryCompany $company, bool $json = false): \Illuminate\Http\Client\PendingRequest
+    {
+        return Http::connectTimeout(15)
+            ->timeout(60)
+            ->retry(2, 1000, throw: false)
+            ->withHeaders($this->authHeaders($company, $json));
+    }
+
     /** @param  array<string, mixed>  $payload */
     protected function fail(string $logMessage, array $payload): array
     {
@@ -1038,8 +1036,27 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         return [
             'success' => false,
-            'message' => __('codflow.delivery.ameex_api_error_logs'),
+            'message' => $this->resolveExceptionMessage($exception),
         ];
+    }
+
+    protected function resolveExceptionMessage(\Throwable $exception): string
+    {
+        $error = $exception->getMessage();
+
+        if (str_contains($error, 'cURL error 28') || str_contains($error, 'SSL connection timeout')) {
+            return __('codflow.delivery.ameex_network_timeout');
+        }
+
+        if (str_contains($error, 'cURL error 56') || str_contains($error, 'Connection reset')) {
+            return __('codflow.delivery.ameex_network_reset');
+        }
+
+        if (str_contains($error, 'cURL error')) {
+            return __('codflow.delivery.ameex_network_error');
+        }
+
+        return __('codflow.delivery.ameex_api_error_logs');
     }
 
     /** @param  array<string, mixed>|null  $json */

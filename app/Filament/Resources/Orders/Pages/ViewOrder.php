@@ -54,7 +54,13 @@ class ViewOrder extends ViewRecord
                     ->icon(Heroicon::OutlinedPaperAirplane)
                     ->requiresConfirmation()
                     ->modalHeading(__('codflow.delivery.send_action'))
-                    ->modalDescription(AmeexActionMessages::stockSendConfirm())
+                    ->modalDescription(fn (Order $record) => AmeexActionMessages::stockSendConfirm(
+                        $record->shipments()->first()?->deliveryCompany
+                            ?? \App\Models\DeliveryCompany::query()
+                                ->where('provider', \App\Enums\DeliveryProvider::Ameex)
+                                ->where('is_active', true)
+                                ->first()
+                    ))
                     ->modalSubmitActionLabel('Confirmer')
                     ->visible(fn (Order $record) => ! $record->shipments()
                         ->where(function ($query): void {

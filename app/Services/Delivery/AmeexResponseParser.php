@@ -180,7 +180,11 @@ class AmeexResponseParser
             return __('codflow.delivery.ameex_sender_required');
         }
 
-        return $message ?? $fallback;
+        if (is_string($message)) {
+            return trim(strip_tags($message));
+        }
+
+        return $fallback;
     }
 
     public static function isSenderSelectionError(string $message): bool

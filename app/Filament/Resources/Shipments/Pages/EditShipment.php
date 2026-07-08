@@ -28,7 +28,7 @@ class EditShipment extends EditRecord
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalHeading(__('codflow.delivery.send_order_ameex'))
-                ->modalDescription(AmeexActionMessages::stockSendConfirm())
+                ->modalDescription(fn (Shipment $record) => AmeexActionMessages::stockSendConfirm($record->deliveryCompany))
                 ->modalSubmitActionLabel('Confirmer')
                 ->visible(fn (Shipment $record) => $record->deliveryCompany?->provider === DeliveryProvider::Ameex
                     && $record->order !== null)

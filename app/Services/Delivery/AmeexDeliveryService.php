@@ -187,6 +187,20 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         return (string) (($company->api_settings ?? [])[$key] ?? $default);
     }
 
+    public function sendsWithoutStockCheck(DeliveryCompany $company): bool
+    {
+        $settings = $company->api_settings ?? [];
+        $value = $settings['send_without_stock_check']
+            ?? $settings['ameex_send_without_stock']
+            ?? false;
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return in_array(strtoupper((string) $value), ['1', 'TRUE', 'YES', 'OUI'], true);
+    }
+
     /** @return array{success: bool, message: string, raw?: array<string, mixed>|null} */
     public function testConnection(DeliveryCompany $company): array
     {
@@ -736,7 +750,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => __('codflow.delivery.ameex_no_items')];
         }
 
-        $stockValidation = $this->validateOrderStockItems($order);
+        $stockValidation = $this->validateOrderStockItems($order, $company);
 
         if ($stockValidation !== null) {
             return ['success' => false, 'message' => $stockValidation];
@@ -799,6 +813,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'cod', 'contents' => (string) $order->final_amount],
         ];
 
+        if ($this->sendsWithoutStockCheck($company)) {
+            return $multipart;
+        }
+
         return $this->withProductReferences($multipart, $order);
     }
 
@@ -823,7 +841,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => __('codflow.delivery.ameex_no_items')];
         }
 
-        $stockValidation = $this->validateOrderStockItems($order);
+        $stockValidation = $this->validateOrderStockItems($order, $company);
 
         if ($stockValidation !== null) {
             return ['success' => false, 'message' => $stockValidation];
@@ -894,6 +912,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'staff', 'contents' => ''],
         ];
 
+        if ($this->sendsWithoutStockCheck($company)) {
+            return $multipart;
+        }
+
         return $this->withProductReferences($multipart, $order);
     }
 
@@ -933,8 +955,12 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      * Validate order items for Ameex STOCK mode.
      * CODFlow stock uses product_id internally; Ameex expects product references externally.
      */
-    public function validateOrderStockItems(Order $order): ?string
+    public function validateOrderStockItems(Order $order, ?DeliveryCompany $company = null): ?string
     {
+        if ($company !== null && $this->sendsWithoutStockCheck($company)) {
+            return null;
+        }
+
         foreach ($order->items as $item) {
             if ($item->product === null) {
                 return __('codflow.delivery.ameex_item_product_missing');

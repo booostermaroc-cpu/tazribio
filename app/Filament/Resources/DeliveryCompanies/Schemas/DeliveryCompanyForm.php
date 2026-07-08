@@ -53,6 +53,11 @@ class DeliveryCompanyForm
                         ->label(__('codflow.delivery.ameex_business_id'))
                         ->helperText(__('codflow.delivery.ameex_business_id_help'))
                         ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value),
+                    Toggle::make('ameex_send_without_stock')
+                        ->label(__('codflow.delivery.ameex_send_without_stock'))
+                        ->helperText(__('codflow.delivery.ameex_send_without_stock_help'))
+                        ->default(false)
+                        ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value),
                     KeyValue::make('api_settings')
                         ->label(__('codflow.ui.api_settings'))
                         ->keyLabel(__('codflow.ui.key'))

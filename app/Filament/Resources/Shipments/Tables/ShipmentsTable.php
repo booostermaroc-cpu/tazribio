@@ -53,6 +53,7 @@ class ShipmentsTable
                     ->icon('heroicon-o-paper-airplane')
                     ->color('success')
                     ->requiresConfirmation()
+                    ->modalDescription(__('codflow.delivery.ameex_stock_confirm'))
                     ->visible(fn (Shipment $record): bool => $record->deliveryCompany?->provider === DeliveryProvider::Ameex
                         && $record->order !== null)
                     ->action(function (Shipment $record): void {

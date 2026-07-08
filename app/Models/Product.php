@@ -16,6 +16,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'sku',
+        'ameex_reference',
         'image',
         'purchase_price',
         'selling_price',
@@ -53,6 +54,26 @@ class Product extends Model
     public function isLowStock(): bool
     {
         return $this->current_stock <= $this->stock_alert;
+    }
+
+    /**
+     * External reference sent to Ameex in STOCK mode (products[n][ref]).
+     * Priority: ameex_reference → sku. Never uses product_id.
+     */
+    public function ameexStockReference(): ?string
+    {
+        if (filled(trim((string) $this->ameex_reference))) {
+            return trim((string) $this->ameex_reference);
+        }
+
+        $sku = trim((string) $this->sku);
+
+        return filled($sku) ? $sku : null;
+    }
+
+    public function usesAmeexReferenceOverride(): bool
+    {
+        return filled(trim((string) $this->ameex_reference));
     }
 
     protected function imageUrl(): Attribute

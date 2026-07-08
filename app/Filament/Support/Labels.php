@@ -18,6 +18,7 @@ class Labels
         'client.logo_url' => 'logo',
         'product.name' => 'product',
         'product.sku' => 'sku',
+        'product.ameex_reference' => 'ameex_reference',
         'product_id' => 'product',
         'assignee.name' => 'assigned_to',
         'creator.name' => 'created_by',

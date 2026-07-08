@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Products\Tables;
 
 use App\Enums\ProductStatus;
 use App\Filament\Support\EnumColumn;
+use App\Filament\Support\Labels;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -26,12 +27,18 @@ class ProductsTable
                     ->circular()
                     ->defaultImageUrl(fn () => 'https://ui-avatars.com/api/?name=P&background=ede9fe&color=7c3aed'),
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('sku')->searchable()->copyable(),
-                TextColumn::make('purchase_price')->money('MAD')->sortable(),
-                TextColumn::make('selling_price')->money('MAD')->sortable(),
+                TextColumn::make('sku')->label(Labels::field('sku'))->searchable()->copyable(),
+                TextColumn::make('ameex_reference')
+                    ->label(Labels::field('ameex_reference'))
+                    ->placeholder('—')
+                    ->searchable()
+                    ->copyable(),
                 TextColumn::make('current_stock')
+                    ->label(Labels::field('current_stock'))
                     ->sortable()
                     ->color(fn ($record) => $record->isLowStock() ? 'danger' : null),
+                TextColumn::make('purchase_price')->money('MAD')->sortable(),
+                TextColumn::make('selling_price')->money('MAD')->sortable(),
                 TextColumn::make('stock_alert')->sortable(),
                 EnumColumn::badge('status', ProductStatus::class),
             ])

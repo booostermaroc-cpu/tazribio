@@ -433,20 +433,32 @@ class CodflowVerifyMvp extends Command
         $printUrl = $ameex->buildDeliveryNotePrintUrl($companyConfigured, 'REF-123');
         $printUrlOk = str_contains($printUrl, '/customer/Delivery/DeliveryNotes/Print/Type/Note?Ref=REF-123');
 
+        $productAmeexReferenceColumn = \Illuminate\Support\Facades\Schema::hasColumn('products', 'ameex_reference');
+
         $ameexPayload = $ameex->multipartToLoggablePayload(
             $ameex->buildCreateShipmentPayload($companyConfigured, $order->fresh(['client', 'items.product']), 'test-api-id', '1')
         );
-        $ameexPayloadUsesRefs = ($ameexPayload['products[0][ref]'] ?? null) === (string) $product->sku
+        $ameexPayloadUsesRefs = ($ameexPayload['products[0][ref]'] ?? null) === $product->fresh()->ameexStockReference()
             && ($ameexPayload['products[0][qty]'] ?? null) === '1';
         $ameexPayloadNoInternalIds = collect(array_keys($ameexPayload))
             ->doesntContain(fn (string $key): bool => str_ends_with($key, '[id]'));
-        $ameexPayloadRequiredFields = ($ameexPayload['type'] ?? null) === 'STOCK'
+        $ameexPayloadIsStockMode = ($ameexPayload['type'] ?? null) === 'STOCK';
+        $ameexPayloadNotSimpleMode = ($ameexPayload['type'] ?? null) !== 'SIMPLE';
+        $ameexPayloadRequiredFields = $ameexPayloadIsStockMode
             && ($ameexPayload['business'] ?? null) === 'test-api-id'
             && ($ameexPayload['order_num'] ?? null) === $order->order_number
             && ($ameexPayload['open'] ?? null) === 'YES'
             && ($ameexPayload['try'] ?? null) === 'NO'
             && array_key_exists('product', $ameexPayload)
             && array_key_exists('staff', $ameexPayload);
+        $product->update(['ameex_reference' => 'AMEEX-REF-VERIFY']);
+        $ameexPayloadUsesAmeexReference = ($ameex->multipartToLoggablePayload(
+            $ameex->buildCreateShipmentPayload($companyConfigured, $order->fresh(['client', 'items.product']), 'test-api-id', '1')
+        )['products[0][ref]'] ?? null) === 'AMEEX-REF-VERIFY';
+        $product->update(['ameex_reference' => null]);
+        $ameexPayloadFallbackToSku = ($ameex->multipartToLoggablePayload(
+            $ameex->buildCreateShipmentPayload($companyConfigured, $order->fresh(['client', 'items.product']), 'test-api-id', '1')
+        )['products[0][ref]'] ?? null) === (string) $product->sku;
         $ameexOrderShipment = Shipment::create([
             'order_id' => $order->id,
             'delivery_company_id' => $companyConfigured->id,
@@ -461,7 +473,7 @@ class CodflowVerifyMvp extends Command
                 'test-api-id',
             )
         );
-        $ameexOrderPayloadUsesRefs = ($ameexOrderPayload['products[0][ref]'] ?? null) === (string) $product->sku
+        $ameexOrderPayloadUsesRefs = ($ameexOrderPayload['products[0][ref]'] ?? null) === $product->fresh()->ameexStockReference()
             && ($ameexOrderPayload['products[0][qty]'] ?? null) === '1';
         $orderStockUsesProductId = $order->items->first()?->product_id === $product->id;
         $shipmentSeparatedFromStock = ! \Illuminate\Support\Facades\Schema::hasColumn('shipments', 'product_id')
@@ -645,9 +657,14 @@ class CodflowVerifyMvp extends Command
             'erp_ameex_config_check' => $notConfigured,
             'erp_ameex_headers' => $configuredOk && $headersOk,
             'erp_ameex_print_url' => $printUrlOk,
+            'erp_product_ameex_reference_column' => $productAmeexReferenceColumn,
             'erp_order_shipment_separation' => $shipmentSeparatedFromStock,
             'erp_order_stock_uses_product_id' => $orderStockUsesProductId,
             'erp_ameex_payload_uses_product_ref' => $ameexPayloadUsesRefs,
+            'erp_ameex_payload_uses_ameex_reference' => $ameexPayloadUsesAmeexReference,
+            'erp_ameex_payload_fallback_to_sku' => $ameexPayloadFallbackToSku,
+            'erp_ameex_payload_stock_mode' => $ameexPayloadIsStockMode,
+            'erp_ameex_payload_not_simple_mode' => $ameexPayloadNotSimpleMode,
             'erp_ameex_payload_no_product_id' => $ameexPayloadNoInternalIds,
             'erp_ameex_payload_required_fields' => $ameexPayloadRequiredFields,
             'erp_ameex_order_payload_uses_product_ref' => $ameexOrderPayloadUsesRefs,

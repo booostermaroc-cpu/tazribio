@@ -656,10 +656,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => __('codflow.delivery.ameex_no_items')];
         }
 
-        $missingReference = $order->items->first(fn ($item): bool => blank($item->product?->sku));
+        $stockValidation = $this->validateOrderStockItems($order);
 
-        if ($missingReference) {
-            return ['success' => false, 'message' => __('codflow.delivery.ameex_product_ref_missing')];
+        if ($stockValidation !== null) {
+            return ['success' => false, 'message' => $stockValidation];
         }
 
         try {
@@ -744,6 +744,12 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => __('codflow.delivery.ameex_no_items')];
         }
 
+        $stockValidation = $this->validateOrderStockItems($order);
+
+        if ($stockValidation !== null) {
+            return ['success' => false, 'message' => $stockValidation];
+        }
+
         if (blank($order->client?->full_name) || blank($order->client?->phone) || blank($order->address)) {
             $missing = array_values(array_filter([
                 blank($order->client?->full_name) ? __('codflow.fields.client') : null,
@@ -757,10 +763,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ];
         }
 
-        $missingReference = $order->items->first(fn ($item): bool => blank($item->product?->sku));
-
-        if ($missingReference) {
-            return ['success' => false, 'message' => __('codflow.delivery.ameex_product_ref_missing')];
+        if (blank($order->city)) {
+            return ['success' => false, 'message' => __('codflow.delivery.ameex_city_missing')];
         }
 
         $cityId = $this->resolveCityId($company, $order->city);
@@ -782,6 +786,9 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     }
 
     /**
+     * STOCK mode payload for Ameex parcel creation.
+     * Uses product references (products[n][ref]), never internal product IDs.
+     *
      * @return list<array{name: string, contents: mixed}>
      */
     public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId): array
@@ -812,17 +819,54 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     }
 
     /**
+     * Append STOCK-mode product lines: products[n][ref] + products[n][qty].
+     * Never sends products[n][id] (SIMPLE mode only).
+     *
      * @param  list<array{name: string, contents: mixed}>  $multipart
      * @return list<array{name: string, contents: mixed}>
      */
     protected function withProductReferences(array $multipart, Order $order): array
     {
         foreach ($order->items->values() as $index => $item) {
-            $multipart[] = ['name' => "products[{$index}][ref]", 'contents' => (string) $item->product->sku];
+            $product = $item->product;
+
+            if ($product === null) {
+                continue;
+            }
+
+            // STOCK mode: products[n][ref] only — never products[n][id] (SIMPLE mode).
+            $reference = filled(trim((string) $product->ameex_reference))
+                ? trim((string) $product->ameex_reference)
+                : trim((string) $product->sku);
+
+            if (blank($reference)) {
+                continue;
+            }
+
+            $multipart[] = ['name' => "products[{$index}][ref]", 'contents' => $reference];
             $multipart[] = ['name' => "products[{$index}][qty]", 'contents' => (string) $item->quantity];
         }
 
         return $multipart;
+    }
+
+    /**
+     * Validate order items for Ameex STOCK mode.
+     * CODFlow stock uses product_id internally; Ameex expects product references externally.
+     */
+    public function validateOrderStockItems(Order $order): ?string
+    {
+        foreach ($order->items as $item) {
+            if ($item->product === null) {
+                return __('codflow.delivery.ameex_item_product_missing');
+            }
+
+            if (blank($item->product->ameexStockReference())) {
+                return __('codflow.delivery.ameex_product_ref_missing');
+            }
+        }
+
+        return null;
     }
 
     protected function productSummary(Order $order): string

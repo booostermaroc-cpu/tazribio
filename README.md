@@ -7,6 +7,52 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Deploy CODFlow on Hostinger VPS
+
+Production deployment files are included for a Hostinger KVM VPS running Ubuntu 24.04, Nginx, PHP 8.3, MySQL 8, Redis, Supervisor, Certbot, Laravel queue workers, and the Laravel scheduler.
+
+Read the full guide:
+
+```text
+docs/deployment/hostinger-vps.md
+```
+
+Main production files:
+
+```text
+.env.production.example
+deploy/nginx/codflow.conf
+deploy/supervisor/codflow-worker.conf
+deploy/scripts/first-install.sh
+deploy/scripts/deploy.sh
+deploy/scripts/backup.sh
+```
+
+Typical first install on the VPS:
+
+```bash
+cd /var/www
+git clone https://github.com/booostermaroc-cpu/tazribio.git codflow
+cd /var/www/codflow
+cp .env.production.example .env
+nano .env
+chmod +x deploy/scripts/*.sh
+./deploy/scripts/first-install.sh
+```
+
+Deploy updates:
+
+```bash
+cd /var/www/codflow
+./deploy/scripts/deploy.sh
+```
+
+Laravel scheduler cron:
+
+```cron
+* * * * * cd /var/www/codflow && php artisan schedule:run >> /dev/null 2>&1
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

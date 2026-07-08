@@ -55,13 +55,14 @@ class ProductResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['name', 'sku'];
+        return ['name', 'sku', 'ameex_reference'];
     }
 
     public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
             __('codflow.fields.sku') => $record->sku,
+            Labels::field('ameex_reference') => $record->ameex_reference ?: '—',
             __('codflow.ui.search_stock') => (string) $record->current_stock,
         ];
     }

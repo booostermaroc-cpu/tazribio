@@ -416,7 +416,8 @@ return [
 
     'products' => [
         'image' => 'Photo',
-        'sku_ameex_help' => 'Référence produit envoyée à Ameex dans products[n][ref]. Ne pas utiliser l\'ID interne.',
+        'sku_ameex_help' => 'Code interne CODFlow. Utilisé comme repli si aucune référence Ameex n\'est configurée.',
+        'ameex_reference_help' => 'Copiez la « Réf » depuis Ameex (ex. 21820-0-31469-4899-XX). Aucune synchronisation automatique.',
     ],
 
     'validation' => [
@@ -463,6 +464,9 @@ return [
         'order' => 'Colis',
         'order_number' => 'N° colis',
         'sku' => 'SKU',
+        'ameex_reference' => 'Ameex Reference',
+        'sku_internal' => 'SKU (interne)',
+        'current_stock' => 'Stock actuel',
         'product' => 'Produit',
         'quantity' => 'Quantité',
         'unit_price' => 'Prix unitaire',
@@ -639,6 +643,7 @@ return [
     'delivery' => [
         'send_action' => 'Envoyer au transporteur',
         'send_order_ameex' => 'Envoyer commande à Ameex',
+        'ameex_stock_confirm' => 'Les produits seront envoyés à Ameex en mode STOCK avec leurs références SKU.',
         'refresh_tracking' => 'Actualiser le suivi',
         'api_not_configured' => 'API livraison non configurée pour ce transporteur.',
         'api_error' => 'Erreur API livraison.',
@@ -661,7 +666,8 @@ return [
         'ameex_address_required' => 'Obligatoire pour l\'envoi Ameex (adresse complète de livraison).',
         'ameex_city_not_found' => 'Ville « :city » introuvable chez Ameex. Synchronisez les villes ou saisissez l\'ID ville.',
         'ameex_no_items' => 'Impossible d\'envoyer à Ameex : le colis ne contient aucun produit.',
-        'ameex_product_ref_missing' => 'Référence produit manquante pour l\'envoi Ameex.',
+        'ameex_item_product_missing' => 'Impossible d\'envoyer à Ameex : un article du colis n\'a pas de produit associé.',
+        'ameex_product_ref_missing' => 'Référence Ameex manquante. Configurez une référence Ameex ou un SKU pour ce produit.',
         'ameex_default_product' => 'Article',
         'ameex_ref_missing' => 'Référence du bon Ameex manquante.',
         'ameex_city_missing' => 'ID ville Ameex manquant.',

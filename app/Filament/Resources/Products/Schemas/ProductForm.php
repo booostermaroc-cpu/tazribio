@@ -22,6 +22,11 @@ class ProductForm
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(191),
+                TextInput::make('ameex_reference')
+                    ->label(Labels::field('ameex_reference'))
+                    ->helperText(__('codflow.products.ameex_reference_help'))
+                    ->placeholder('21820-0-31469-4899-XX')
+                    ->maxLength(191),
                 FileUpload::make('image')
                     ->label(__('codflow.products.image'))
                     ->image()

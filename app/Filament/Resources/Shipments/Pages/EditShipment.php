@@ -26,6 +26,7 @@ class EditShipment extends EditRecord
                 ->icon(Heroicon::OutlinedPaperAirplane)
                 ->color('success')
                 ->requiresConfirmation()
+                ->modalDescription(__('codflow.delivery.ameex_stock_confirm'))
                 ->visible(fn (Shipment $record) => $record->deliveryCompany?->provider === DeliveryProvider::Ameex
                     && $record->order !== null)
                 ->action(function (Shipment $record): void {

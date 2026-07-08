@@ -24,9 +24,17 @@ class NotificationService
     {
         $roles = is_array($roles) ? $roles : [$roles];
 
-        $this->getUsersByRoles($roles)->each(
-            fn (User $user) => $user->notify($notification)
-        );
+        $this->getUsersByRoles($roles)->each(function (User $user) use ($notification): void {
+            try {
+                $user->notify($notification);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::warning('Notification delivery failed', [
+                    'user_id' => $user->id,
+                    'notification' => $notification::class,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        });
     }
 
     public function notifyAdminsAndManagers(Notification $notification): void

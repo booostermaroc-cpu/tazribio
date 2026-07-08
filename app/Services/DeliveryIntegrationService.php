@@ -86,7 +86,14 @@ class DeliveryIntegrationService
 
         if ($result['success']) {
             if (blank($result['tracking_number'] ?? null)) {
-                $this->notificationService->deliveryApiError($order, __('codflow.delivery.ameex_invalid_response'));
+                try {
+                    $this->notificationService->deliveryApiError($order, __('codflow.delivery.ameex_invalid_response'));
+                } catch (\Throwable $exception) {
+                    Log::warning('deliveryApiError notification failed', [
+                        'order_id' => $order->id,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
 
                 return ['success' => false, 'message' => __('codflow.delivery.ameex_invalid_response')];
             }
@@ -102,17 +109,25 @@ class DeliveryIntegrationService
             }
 
             if (isset($result['raw'])) {
-                $update['ameex_raw_response'] = $result['raw'];
+                $update['ameex_raw_response'] = $this->sanitizeRawResponse($result['raw']);
             }
 
             $shipment->update($update);
 
-            $this->trackingService->addTrackingEvent(
-                $shipment,
-                ShipmentStatus::Pending->value,
-                __('codflow.delivery.sent_to_carrier'),
-                $result['raw'] ?? null,
-            );
+            try {
+                $this->trackingService->addTrackingEvent(
+                    $shipment,
+                    ShipmentStatus::Pending->value,
+                    __('codflow.delivery.sent_to_carrier'),
+                    isset($result['raw']) ? $this->sanitizeRawResponse($result['raw']) : null,
+                );
+            } catch (\Throwable $exception) {
+                Log::warning('addTrackingEvent failed after Ameex send', [
+                    'order_id' => $order->id,
+                    'shipment_id' => $shipment->id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
 
             try {
                 $this->notificationService->orderSentToDelivery($order, $company);
@@ -136,10 +151,29 @@ class DeliveryIntegrationService
         }
 
         if (isset($result['raw'])) {
-            $shipment->update(['ameex_raw_response' => $result['raw']]);
+            $shipment->update(['ameex_raw_response' => $this->sanitizeRawResponse($result['raw'])]);
         }
 
         return ['success' => false, 'message' => $result['message']];
+    }
+
+    /** @param  mixed  $raw */
+    protected function sanitizeRawResponse(mixed $raw): mixed
+    {
+        if (! is_array($raw)) {
+            return is_string($raw) ? mb_substr($raw, 0, 5000) : $raw;
+        }
+
+        $encoded = json_encode($raw, JSON_UNESCAPED_UNICODE);
+
+        if ($encoded !== false && strlen($encoded) <= 60000) {
+            return $raw;
+        }
+
+        return [
+            'truncated' => true,
+            'preview' => mb_substr($encoded ?: '', 0, 5000),
+        ];
     }
 
     protected function hasCarrierReference(Shipment $shipment): bool

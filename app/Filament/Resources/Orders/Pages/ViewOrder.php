@@ -64,7 +64,7 @@ class ViewOrder extends ViewRecord
                             })->orWhereNotNull('ameex_parcel_code');
                         })
                         ->exists())
-                    ->action(fn (Order $record) => $this->sendToCarrier($record)),
+                    ->action(fn () => $this->sendToCarrier($this->getRecord())),
                 Action::make('refreshTracking')
                     ->label(__('codflow.delivery.refresh_tracking'))
                     ->icon(Heroicon::OutlinedArrowPath)
@@ -190,8 +190,26 @@ class ViewOrder extends ViewRecord
     protected function sendToCarrier(Order $record): void
     {
         try {
-            AmeexNotifications::notify(app(DeliveryIntegrationService::class)->sendOrderToCarrier($record));
-            $this->record->refresh();
+            $result = app(DeliveryIntegrationService::class)->sendOrderToCarrier($record);
+
+            try {
+                AmeexNotifications::notify($result);
+            } catch (\Throwable $exception) {
+                Log::warning('Ameex Filament notification failed', [
+                    'order_id' => $record->id,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                Notification::make()
+                    ->title(__('codflow.notifications.error'))
+                    ->body($result['message'] ?? $exception->getMessage())
+                    ->danger()
+                    ->send();
+            }
+
+            if ($result['success'] ?? false) {
+                $this->refreshOrderRecord();
+            }
         } catch (\Throwable $exception) {
             Log::error('Ameex sendToCarrier failed', [
                 'order_id' => $record->id,

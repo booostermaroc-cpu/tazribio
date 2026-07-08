@@ -22,15 +22,23 @@ class DashboardMetrics
 
     public static function clearCache(): void
     {
-        Cache::forget(self::CACHE_KEY);
-        Cache::forget('codflow.nav.orders_badge');
-        Cache::forget('codflow.nav.stock_badge');
+        try {
+            Cache::forget(self::CACHE_KEY);
+            Cache::forget('codflow.nav.orders_badge');
+            Cache::forget('codflow.nav.stock_badge');
+        } catch (\Throwable) {
+            // Redis/cache indisponible en prod : ne pas bloquer les actions métier.
+        }
     }
 
     /** @return array<string, mixed> */
     public static function snapshot(): array
     {
-        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, fn (): array => self::computeSnapshot());
+        try {
+            return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, fn (): array => self::computeSnapshot());
+        } catch (\Throwable) {
+            return self::computeSnapshot();
+        }
     }
 
     /** @return array<string, mixed> */
@@ -206,18 +214,33 @@ class DashboardMetrics
 
     public static function newOrdersBadgeCount(): int
     {
-        return (int) Cache::remember('codflow.nav.orders_badge', self::CACHE_TTL, fn () => Order::query()
-            ->whereIn('status', array_map(
-                fn (OrderStatus $status): string => $status->value,
-                OrderWorkflow::confirmationPhaseStatuses(),
-            ))
-            ->count());
+        try {
+            return (int) Cache::remember('codflow.nav.orders_badge', self::CACHE_TTL, fn () => Order::query()
+                ->whereIn('status', array_map(
+                    fn (OrderStatus $status): string => $status->value,
+                    OrderWorkflow::confirmationPhaseStatuses(),
+                ))
+                ->count());
+        } catch (\Throwable) {
+            return Order::query()
+                ->whereIn('status', array_map(
+                    fn (OrderStatus $status): string => $status->value,
+                    OrderWorkflow::confirmationPhaseStatuses(),
+                ))
+                ->count();
+        }
     }
 
     public static function lowStockBadgeCount(): int
     {
-        return (int) Cache::remember('codflow.nav.stock_badge', self::CACHE_TTL, fn () => Product::query()
-            ->whereColumn('current_stock', '<=', 'stock_alert')
-            ->count());
+        try {
+            return (int) Cache::remember('codflow.nav.stock_badge', self::CACHE_TTL, fn () => Product::query()
+                ->whereColumn('current_stock', '<=', 'stock_alert')
+                ->count());
+        } catch (\Throwable) {
+            return Product::query()
+                ->whereColumn('current_stock', '<=', 'stock_alert')
+                ->count();
+        }
     }
 }

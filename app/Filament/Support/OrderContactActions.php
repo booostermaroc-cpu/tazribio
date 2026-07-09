@@ -38,21 +38,11 @@ class OrderContactActions
 
     public static function orderMessage(Order $order): string
     {
-        $name = $order->client?->full_name ?? __('codflow.order.default_client_name');
-
-        return __('codflow.order.whatsapp_message', [
-            'name' => $name,
-            'order' => $order->order_number,
-            'amount' => number_format($order->carrierCodAmount(), 2, ',', ' '),
-        ]);
+        return trim(__('codflow.order.whatsapp_message'));
     }
 
     public static function newOrderMessage(?string $orderNumber, ?float $amount, ?string $clientName = null): string
     {
-        return __('codflow.order.whatsapp_message', [
-            'name' => $clientName ?? __('codflow.order.default_client_name'),
-            'order' => $orderNumber ?? '—',
-            'amount' => number_format((float) ($amount ?? 0), 2, ',', ' '),
-        ]);
+        return trim(__('codflow.order.whatsapp_message'));
     }
 }

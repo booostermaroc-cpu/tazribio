@@ -154,7 +154,10 @@ return [
         'contact_whatsapp' => 'Contacter WhatsApp',
         'contact_call' => 'Appeler le client',
         'default_client_name' => 'client',
-        'whatsapp_message' => 'Bonjour :name, nous vous contactons concernant votre colis :order pour un montant de :amount MAD. Merci de nous confirmer votre colis.',
+        'whatsapp_message' => <<<'MSG'
+السلام عليكم، هاهي لاكموند راه bien emballé وداك الخير انشاءلله راه كيما بغيتيه وبأحسن حلة
+كيما قلتليك غدا انشاءلله ولا بعدو كحد أقصى غايتاصل بيك الليفرور باش ايجيبها ليك ( وراه عندك الحق تقلبها قبل ماتخلص الليفرور ).
+MSG,
         'confirm_modal_title' => 'Confirmer le colis',
         'confirm_modal_description' => 'Comment avez-vous contacté le client pour confirmer ce colis ?',
         'confirm_contact_method' => 'Mode de contact',

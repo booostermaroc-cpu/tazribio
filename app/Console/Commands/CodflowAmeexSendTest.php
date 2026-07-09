@@ -9,9 +9,12 @@ use Illuminate\Console\Command;
 
 class CodflowAmeexSendTest extends Command
 {
-    protected $signature = 'codflow:ameex:send-test {order : ID du colis à envoyer à Ameex}';
+    protected $signature = 'codflow:ameex:send-test
+                            {order : ID du colis à envoyer à Ameex}
+                            {--order-only : Créer uniquement la commande manuelle Ameex (colis déjà envoyé)}
+                            {--force : Forcer la recréation même si déjà synchronisée}';
 
-    protected $description = 'Teste l\'envoi Ameex d\'un colis (même logique que le bouton Filament)';
+    protected $description = 'Teste l\'envoi Ameex d\'un colis ou la création de commande manuelle';
 
     public function handle(DeliveryIntegrationService $integration, AmeexDeliveryService $ameex): int
     {
@@ -25,8 +28,9 @@ class CodflowAmeexSendTest extends Command
             return self::FAILURE;
         }
 
-        $company = $order->shipments()->first()?->deliveryCompany
-            ?? $order->shipment?->deliveryCompany
+        $shipment = $order->shipments()->first() ?? $order->shipment;
+
+        $company = $shipment?->deliveryCompany
             ?? \App\Models\DeliveryCompany::query()
                 ->where('provider', \App\Enums\DeliveryProvider::Ameex)
                 ->where('is_active', true)
@@ -41,13 +45,42 @@ class CodflowAmeexSendTest extends Command
             $this->line('Hub Ameex: '.($ameex->businessDisplayName($company) ?? '—').' ('.($ameex->businessId($company) ?? 'manquant').')');
         }
 
+        if ($shipment !== null) {
+            $this->line('Tracking: '.($shipment->tracking_number ?? '—'));
+            $this->line('Commande Ameex sync: '.($ameex->isAmeexOrderSynced($shipment) ? 'oui' : 'non'));
+        }
+
         foreach ($order->items as $item) {
             $this->line('  - '.($item->product?->ameexStockReference() ?? 'sans ref').' x'.$item->quantity);
         }
 
         $this->newLine();
 
-        $result = $integration->sendOrderToCarrier($order);
+        if ($this->option('order-only')) {
+            if ($shipment === null) {
+                $this->error('Aucun shipment lié à ce colis.');
+
+                return self::FAILURE;
+            }
+
+            if ($company === null) {
+                $this->error('Aucun transporteur Ameex configuré.');
+
+                return self::FAILURE;
+            }
+
+            if ($this->option('force') && is_array($shipment->ameex_raw_response)) {
+                $raw = $shipment->ameex_raw_response;
+                unset($raw['ameex_order_synced'], $raw['ameex_order_manual'], $raw['ameex_order_path']);
+                $shipment->update(['ameex_raw_response' => $raw]);
+                $shipment->refresh();
+                $this->warn('Flag ameex_order_synced réinitialisé.');
+            }
+
+            $result = $integration->sendShipmentOrderToAmeex($shipment);
+        } else {
+            $result = $integration->sendOrderToCarrier($order);
+        }
 
         $this->table(['Clé', 'Valeur'], [
             ['success', ($result['success'] ?? false) ? 'oui' : 'NON'],

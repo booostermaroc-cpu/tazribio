@@ -763,12 +763,20 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         }
 
         $cityId = $this->resolveCityId($company, $pickup->ameex_city_id);
+        $citiesMap = $this->normalizedCitiesMap($company);
 
         if (blank($cityId)) {
             return [
                 'success' => false,
                 'message' => __('codflow.delivery.ameex_city_not_found', ['city' => $pickup->ameex_city_id ?? '']),
             ];
+        }
+
+        if ($citiesMap !== [] && ! array_key_exists($cityId, $citiesMap)) {
+            Log::warning('Ameex pickup city id not in synced map, sending anyway', [
+                'pickup_id' => $pickup->id,
+                'city_id' => $cityId,
+            ]);
         }
 
         try {
@@ -1624,22 +1632,29 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return null;
         }
 
-        if (ctype_digit(trim($cityName))) {
-            return trim($cityName);
+        $trimmed = trim((string) $cityName);
+        $citiesMap = $this->normalizedCitiesMap($company);
+
+        if ($citiesMap === [] && ! AmeexResponseParser::looksLikeAmeexCityId($trimmed)) {
+            $sync = $this->syncCities($company);
+            $citiesMap = AmeexResponseParser::ensureCityIdToNameMap(
+                is_array($sync['cities'] ?? null) ? $sync['cities'] : [],
+            );
         }
 
-        $citiesMap = $settings['ameex_cities_map'] ?? null;
+        if ($citiesMap !== [] && array_key_exists($trimmed, $citiesMap)) {
+            return $trimmed;
+        }
 
-        if (! is_array($citiesMap) || $citiesMap === []) {
-            $sync = $this->syncCities($company);
-            $citiesMap = is_array($sync['cities'] ?? null) ? $sync['cities'] : [];
+        if (AmeexResponseParser::looksLikeAmeexCityId($trimmed)) {
+            return $trimmed;
         }
 
         if ($citiesMap === []) {
             return null;
         }
 
-        $needle = $this->normalizeCityName($cityName);
+        $needle = $this->normalizeCityName($trimmed);
 
         foreach ($citiesMap as $id => $name) {
             if ($this->normalizeCityName((string) $name) === $needle) {
@@ -1655,7 +1670,22 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             }
         }
 
+        $idFromName = array_search($trimmed, $citiesMap, true);
+
+        if ($idFromName !== false) {
+            return (string) $idFromName;
+        }
+
         return null;
+    }
+
+    /** @return array<string, string> */
+    public function normalizedCitiesMap(DeliveryCompany $company): array
+    {
+        $settings = $company->api_settings ?? [];
+        $map = is_array($settings['ameex_cities_map'] ?? null) ? $settings['ameex_cities_map'] : [];
+
+        return AmeexResponseParser::ensureCityIdToNameMap($map);
     }
 
     /**

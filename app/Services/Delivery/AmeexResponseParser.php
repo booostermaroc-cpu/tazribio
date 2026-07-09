@@ -361,7 +361,7 @@ class AmeexResponseParser
             return [];
         }
 
-        $cities = $raw['api']['cities'] ?? $raw['cities'] ?? $raw;
+        $cities = $raw['api']['cities'] ?? $raw['cities'] ?? $raw['api']['data'] ?? $raw['data'] ?? $raw;
 
         if (! is_array($cities)) {
             return [];
@@ -370,19 +370,85 @@ class AmeexResponseParser
         $map = [];
 
         foreach ($cities as $id => $city) {
-            if (! is_array($city)) {
+            if (is_array($city)) {
+                $cityId = (string) ($city['id'] ?? $city['ID'] ?? $city['city_id'] ?? $id);
+                $name = (string) ($city['name'] ?? $city['Name'] ?? $city['city'] ?? $city['label'] ?? '');
+
+                if ($cityId !== '' && $name !== '') {
+                    $map[$cityId] = $name;
+                }
+
                 continue;
             }
 
-            $cityId = (string) ($city['id'] ?? $id);
-            $name = (string) ($city['name'] ?? '');
+            if (is_scalar($city)) {
+                $cityId = (string) $id;
+                $name = trim((string) $city);
 
-            if ($cityId !== '' && $name !== '') {
-                $map[$cityId] = $name;
+                if ($cityId !== '' && $name !== '') {
+                    $map[$cityId] = $name;
+                }
             }
         }
 
-        return $map;
+        return self::ensureCityIdToNameMap($map);
+    }
+
+    /**
+     * @param  array<string|int, string>  $map
+     * @return array<string, string>
+     */
+    public static function ensureCityIdToNameMap(array $map): array
+    {
+        if ($map === []) {
+            return [];
+        }
+
+        $numericKeyCount = 0;
+        $numericValueCount = 0;
+
+        foreach ($map as $key => $value) {
+            if (self::looksLikeAmeexCityId($key)) {
+                $numericKeyCount++;
+            }
+
+            if (self::looksLikeAmeexCityId($value)) {
+                $numericValueCount++;
+            }
+        }
+
+        if ($numericValueCount > $numericKeyCount) {
+            $flipped = [];
+
+            foreach ($map as $name => $id) {
+                $flipped[(string) $id] = (string) $name;
+            }
+
+            return $flipped;
+        }
+
+        $normalized = [];
+
+        foreach ($map as $id => $name) {
+            $normalized[(string) $id] = (string) $name;
+        }
+
+        return $normalized;
+    }
+
+    public static function looksLikeAmeexCityId(mixed $value): bool
+    {
+        if (is_int($value) || is_float($value)) {
+            return true;
+        }
+
+        if (! is_string($value)) {
+            return false;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed !== '' && ctype_digit($trimmed);
     }
 
     /** @return array<string, string> */

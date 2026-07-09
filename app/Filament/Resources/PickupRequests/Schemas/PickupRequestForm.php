@@ -6,6 +6,7 @@ use App\Enums\DeliveryProvider;
 use App\Enums\PickupRequestStatus;
 use App\Filament\Support\Labels;
 use App\Models\DeliveryCompany;
+use App\Services\Delivery\AmeexDeliveryService;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -99,9 +100,14 @@ class PickupRequestForm
         }
 
         $company = DeliveryCompany::query()->find($companyId);
-        $map = $company?->api_settings['ameex_cities_map'] ?? [];
 
-        if (! is_array($map) || $map === []) {
+        if ($company === null) {
+            return [];
+        }
+
+        $map = app(AmeexDeliveryService::class)->normalizedCitiesMap($company);
+
+        if ($map === []) {
             return [];
         }
 

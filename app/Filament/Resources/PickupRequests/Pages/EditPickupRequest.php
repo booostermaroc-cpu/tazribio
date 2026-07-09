@@ -24,6 +24,15 @@ class EditPickupRequest extends EditRecord
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->deliveryCompany?->provider?->value === 'ameex')
                 ->action(function (): void {
+                    $state = $this->form->getState();
+
+                    $this->record->update([
+                        'pickup_address' => $state['pickup_address'] ?? $this->record->pickup_address,
+                        'pickup_phone' => $state['pickup_phone'] ?? $this->record->pickup_phone,
+                        'ameex_city_id' => $state['ameex_city_id'] ?? $this->record->ameex_city_id,
+                        'notes' => $state['notes'] ?? $this->record->notes,
+                    ]);
+
                     AmeexNotifications::notify(
                         app(PickupIntegrationService::class)->sendToAmeex($this->record->fresh())
                     );

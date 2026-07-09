@@ -858,6 +858,25 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         $result = $this->postCreateShipmentParcel($company, $order, $shipment, $path, $businessId, $cityId, stockMode: true);
 
+        if (! ($result['success'] ?? false) && filled($this->hubId($company)) && $this->isSenderErrorResult($result)) {
+            Log::info('Ameex STOCK sender error, retrying STOCK with hub as business', [
+                'order_id' => $order->id,
+                'shipment_id' => $shipment->id,
+                'hub_id' => $this->hubId($company),
+            ]);
+
+            $result = $this->postCreateShipmentParcel(
+                $company,
+                $order,
+                $shipment,
+                $path,
+                $businessId,
+                $cityId,
+                stockMode: true,
+                hubAsBusiness: true,
+            );
+        }
+
         if (! ($result['success'] ?? false)) {
             Log::info('Ameex STOCK failed, retrying parcel without STOCK (livraison directe)', [
                 'order_id' => $order->id,
@@ -883,15 +902,17 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         string $cityId,
         bool $stockMode = true,
         bool $withoutStockFallback = false,
+        bool $hubAsBusiness = false,
     ): array {
         try {
-            $multipart = $this->buildCreateShipmentPayload($company, $order, $businessId, $cityId, $stockMode);
+            $multipart = $this->buildCreateShipmentPayload($company, $order, $businessId, $cityId, $stockMode, $hubAsBusiness);
 
             if (config('app.debug')) {
                 Log::debug('Ameex create parcel payload', [
                     'order_id' => $order->id,
                     'shipment_id' => $shipment->id,
                     'stock_mode' => $stockMode,
+                    'hub_as_business' => $hubAsBusiness,
                     'payload' => $this->multipartToLoggablePayload($multipart),
                 ]);
             }
@@ -939,6 +960,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 'message' => $message,
                 'raw' => array_merge($raw, [
                     'ameex_parcel_stock_mode' => $stockMode,
+                    'ameex_parcel_hub_id' => $stockMode ? $this->hubId($company) : null,
+                    'ameex_parcel_hub_as_business' => $stockMode && $hubAsBusiness,
                 ]),
             ];
         } catch (\Throwable $exception) {
@@ -1047,6 +1070,28 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return array_merge($stockResult, ['warehouse_synced' => true]);
         }
 
+        if (! ($stockResult['success'] ?? false) && filled($this->hubId($company)) && $this->isSenderErrorResult($stockResult)) {
+            Log::info('Ameex warehouse STOCK sender error, retrying with hub as business', [
+                'shipment_id' => $shipment->id,
+                'hub_id' => $this->hubId($company),
+            ]);
+
+            $stockResult = $this->tryCreateAmeexOrderOnPaths(
+                $company,
+                $shipment,
+                $order,
+                (string) $businessId,
+                (string) $cityId,
+                $paths,
+                stockMode: true,
+                hubAsBusiness: true,
+            );
+
+            if ($stockResult['success'] ?? false) {
+                return array_merge($stockResult, ['warehouse_synced' => true]);
+            }
+        }
+
         Log::info('Ameex warehouse STOCK order failed, trying manual order without STOCK', [
             'shipment_id' => $shipment->id,
             'message' => $stockResult['message'] ?? __('codflow.delivery.api_error'),
@@ -1086,6 +1131,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         array $paths,
         bool $stockMode = true,
         bool $withoutStockFallback = false,
+        bool $hubAsBusiness = false,
     ): array {
         $lastResult = ['success' => false, 'message' => __('codflow.delivery.ameex_order_endpoint_missing')];
 
@@ -1099,6 +1145,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 $cityId,
                 $stockMode,
                 $withoutStockFallback,
+                $hubAsBusiness,
             );
 
             if ($result['success'] ?? false) {
@@ -1137,15 +1184,17 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         string $cityId,
         bool $stockMode = true,
         bool $withoutStockFallback = false,
+        bool $hubAsBusiness = false,
     ): array {
         try {
-            $multipart = $this->buildCreateAmeexOrderPayload($company, $shipment, $order, $businessId, $cityId, $stockMode);
+            $multipart = $this->buildCreateAmeexOrderPayload($company, $shipment, $order, $businessId, $cityId, $stockMode, $hubAsBusiness);
 
             if (config('app.debug')) {
                 Log::debug('Ameex create order payload', [
                     'shipment_id' => $shipment->id,
                     'order_id' => $order->id,
                     'stock_mode' => $stockMode,
+                    'hub_as_business' => $hubAsBusiness,
                     'payload' => $this->multipartToLoggablePayload($multipart),
                 ]);
             }
@@ -1199,6 +1248,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                     'ameex_order_warehouse' => $stockMode,
                     'ameex_order_manual' => ! $stockMode,
                     'ameex_order_path' => $path,
+                    'ameex_order_hub_id' => $stockMode ? $this->hubId($company) : null,
+                    'ameex_order_hub_as_business' => $stockMode && $hubAsBusiness,
                 ]),
             ]);
 
@@ -1228,7 +1279,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     /**
      * @return list<array{name: string, contents: mixed}>
      */
-    public function buildCreateAmeexOrderPayload(DeliveryCompany $company, Shipment $shipment, Order $order, string $businessId, string $cityId, bool $stockMode = true): array
+    public function buildCreateAmeexOrderPayload(DeliveryCompany $company, Shipment $shipment, Order $order, string $businessId, string $cityId, bool $stockMode = true, bool $hubAsBusiness = false): array
     {
         $order->loadMissing(['client', 'items.product']);
 
@@ -1250,6 +1301,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
             $multipart = $this->withProductReferences($multipart, $order);
+
+            return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness);
         }
 
         return $multipart;
@@ -1323,7 +1376,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      *
      * @return list<array{name: string, contents: mixed}>
      */
-    public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId, bool $stockMode = true): array
+    public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId, bool $stockMode = true, bool $hubAsBusiness = false): array
     {
         $order->loadMissing(['client', 'items.product']);
         $settings = $company->api_settings ?? [];
@@ -1351,9 +1404,19 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
             $multipart = $this->withProductReferences($multipart, $order);
+
+            return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness);
         }
 
         return $multipart;
+    }
+
+    /** @param  array{success?: bool, message?: string, raw?: mixed}  $result */
+    protected function isSenderErrorResult(array $result): bool
+    {
+        $message = AmeexResponseParser::extractRawApiMessage($result['raw'] ?? null) ?? ($result['message'] ?? '');
+
+        return is_string($message) && AmeexResponseParser::isSenderSelectionError($message);
     }
 
     /**

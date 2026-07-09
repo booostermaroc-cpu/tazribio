@@ -2,6 +2,8 @@
 
 namespace App\Services\Delivery;
 
+use App\Filament\Support\AmeexLabels;
+
 class AmeexResponseParser
 {
     /** @return array<int, array<string, mixed>> */
@@ -177,7 +179,7 @@ class AmeexResponseParser
         }
 
         if (is_string($message) && self::isSenderSelectionError($message)) {
-            return __('codflow.delivery.ameex_sender_required');
+            return AmeexLabels::delivery('ameex_sender_required');
         }
 
         if (is_string($message) && self::isInsufficientStockError($message)) {

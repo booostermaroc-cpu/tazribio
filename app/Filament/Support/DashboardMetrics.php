@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Services\OrderProfitService;
 use App\Services\SettingService;
+use App\Support\CarrierStuckOrders;
 use App\Support\OrderWorkflow;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -50,9 +51,12 @@ class DashboardMetrics
         $delivered = (int) ($statusCounts[OrderStatus::Delivered->value] ?? 0);
         $returned = (int) ($statusCounts[OrderStatus::Returned->value] ?? 0);
         $cancelled = (int) ($statusCounts[OrderStatus::Cancelled->value] ?? 0);
+        $shipped = (int) ($statusCounts[OrderStatus::Shipped->value] ?? 0);
+        $stuckAtCarrier = CarrierStuckOrders::count();
         $totalOrders = (int) $statusCounts->sum();
 
         $inProgress = max(0, $totalOrders - $delivered - $returned - $cancelled);
+        $inProgressExcludingStuck = max(0, $inProgress - $stuckAtCarrier);
 
         $revenue = (float) Order::query()
             ->excludingCod()
@@ -94,6 +98,8 @@ class DashboardMetrics
             'delivered' => $delivered,
             'returned' => $returned,
             'cancelled' => $cancelled,
+            'shipped' => $shipped,
+            'stuck_at_carrier' => $stuckAtCarrier,
             'revenue' => $revenue,
             'estimated_profit' => $estimatedProfit,
             'orders_trend' => self::formatTrend($currentMonthOrders, $prevMonthOrders),
@@ -103,7 +109,8 @@ class DashboardMetrics
                 __('codflow.dashboard.distribution.delivered') => $delivered,
                 __('codflow.dashboard.distribution.returned') => $returned,
                 __('codflow.dashboard.distribution.cancelled') => $cancelled,
-                __('codflow.dashboard.distribution.in_progress') => $inProgress,
+                __('codflow.dashboard.distribution.stuck_at_carrier') => $stuckAtCarrier,
+                __('codflow.dashboard.distribution.in_progress') => $inProgressExcludingStuck,
             ],
             'revenue_per_day_14' => self::revenuePerDay(14),
             'revenue_per_day_30' => self::revenuePerDay(30),

@@ -40,6 +40,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             \App\Filament\Widgets\FinancialOverviewWidget::class,
+            \App\Filament\Widgets\ParcelStatusOverviewWidget::class,
             \App\Filament\Widgets\OrderStatusChartWidget::class,
             \App\Filament\Widgets\RevenueEvolutionChartWidget::class,
             \App\Filament\Widgets\PaymentMethodChartWidget::class,

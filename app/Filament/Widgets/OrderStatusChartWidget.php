@@ -39,7 +39,7 @@ class OrderStatusChartWidget extends ChartWidget
             'datasets' => [
                 [
                     'data' => array_values($distribution),
-                    'backgroundColor' => ['#22c55e', '#f97316', '#ef4444', '#dc2626', '#3b82f6'],
+                    'backgroundColor' => ['#22c55e', '#f97316', '#ef4444', '#3b82f6'],
                     'borderWidth' => 3,
                     'borderColor' => '#ffffff',
                     'hoverOffset' => 6,

@@ -11,6 +11,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class CodFlowStatsOverview extends StatsOverviewWidget
 {
+    protected static bool $isDiscovered = false;
+
     protected static ?int $sort = 1;
 
     protected static bool $isLazy = false;

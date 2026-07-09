@@ -34,4 +34,18 @@ class Dashboard extends BaseDashboard
             'lg' => 12,
         ];
     }
+
+    /** @return array<class-string> */
+    public function getWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\FinancialOverviewWidget::class,
+            \App\Filament\Widgets\OrderStatusChartWidget::class,
+            \App\Filament\Widgets\RevenueEvolutionChartWidget::class,
+            \App\Filament\Widgets\PaymentMethodChartWidget::class,
+            \App\Filament\Widgets\TopProductsWidget::class,
+            \App\Filament\Widgets\LatestOrdersWidget::class,
+            \App\Filament\Widgets\LowStockAlertsWidget::class,
+        ];
+    }
 }

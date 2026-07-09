@@ -5,10 +5,8 @@ namespace App\Filament\Support;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Product;
-use App\Services\CarrierFeeService;
 use App\Services\OrderProfitService;
 use App\Services\SettingService;
-use App\Support\CarrierStuckOrders;
 use App\Support\OrderWorkflow;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -54,10 +52,7 @@ class DashboardMetrics
         $cancelled = (int) ($statusCounts[OrderStatus::Cancelled->value] ?? 0);
         $totalOrders = (int) $statusCounts->sum();
 
-        $inProgress = $totalOrders - $delivered - $returned - $cancelled;
-        $stuckAtCarrier = CarrierStuckOrders::count();
-        $stuckAtCarrierAmount = CarrierStuckOrders::totalAmount();
-        $inProgressActive = max(0, $inProgress - $stuckAtCarrier);
+        $inProgress = max(0, $totalOrders - $delivered - $returned - $cancelled);
 
         $revenue = (float) Order::query()
             ->excludingCod()
@@ -65,8 +60,6 @@ class DashboardMetrics
             ->sum('final_amount');
 
         $estimatedProfit = self::estimatedGrossProfit();
-        $carrierPayable = app(CarrierFeeService::class)->totalPayable();
-        $carrierMonthPayable = app(CarrierFeeService::class)->monthPayable();
 
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
@@ -101,12 +94,8 @@ class DashboardMetrics
             'delivered' => $delivered,
             'returned' => $returned,
             'cancelled' => $cancelled,
-            'stuck_at_carrier' => $stuckAtCarrier,
-            'stuck_at_carrier_amount' => $stuckAtCarrierAmount,
             'revenue' => $revenue,
             'estimated_profit' => $estimatedProfit,
-            'carrier_payable' => $carrierPayable,
-            'carrier_payable_month' => $carrierMonthPayable,
             'orders_trend' => self::formatTrend($currentMonthOrders, $prevMonthOrders),
             'delivered_trend' => self::formatTrend($currentMonthDelivered, $prevMonthDelivered),
             'revenue_trend' => self::formatTrend($currentMonthRevenue, $prevMonthRevenue),
@@ -114,8 +103,7 @@ class DashboardMetrics
                 __('codflow.dashboard.distribution.delivered') => $delivered,
                 __('codflow.dashboard.distribution.returned') => $returned,
                 __('codflow.dashboard.distribution.cancelled') => $cancelled,
-                __('codflow.dashboard.distribution.stuck_at_carrier') => $stuckAtCarrier,
-                __('codflow.dashboard.distribution.in_progress') => $inProgressActive,
+                __('codflow.dashboard.distribution.in_progress') => $inProgress,
             ],
             'revenue_per_day_14' => self::revenuePerDay(14),
             'revenue_per_day_30' => self::revenuePerDay(30),

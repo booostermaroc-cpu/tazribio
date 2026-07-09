@@ -5,7 +5,10 @@ namespace App\Filament\Resources\Users;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\RelationManagers\CommissionsRelationManager;
 use App\Filament\Resources\Users\Schemas\UserForm;
+use App\Filament\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Filament\Support\Nav;
 use App\Filament\Support\HasCodflowResourceLabels;
@@ -40,6 +43,11 @@ class UserResource extends Resource
         return UserForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return UserInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
@@ -48,7 +56,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            CommissionsRelationManager::class,
         ];
     }
 
@@ -57,6 +65,7 @@ class UserResource extends Resource
         return [
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
+            'view' => ViewUser::route('/{record}'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
     }

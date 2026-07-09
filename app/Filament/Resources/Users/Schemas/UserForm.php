@@ -101,17 +101,17 @@ class UserForm
                         Select::make('confirmation_commission_type')
                             ->label(Labels::field('commission_type'))
                             ->options(CommissionType::options())
-                            ->default(CommissionType::None->value)
+                            ->default(CommissionType::Fixed->value)
                             ->required(),
                         TextInput::make('confirmation_commission_value')
                             ->label(Labels::field('commission_value'))
                             ->numeric()
                             ->minValue(0)
-                            ->default(0),
+                            ->default(15),
                         Select::make('apply_commission_on')
                             ->label(Labels::field('commission_apply_on'))
                             ->options(CommissionApplyOn::options())
-                            ->default(CommissionApplyOn::Delivered->value)
+                            ->default(CommissionApplyOn::Confirmed->value)
                             ->required(),
                     ])
                     ->columns(3)

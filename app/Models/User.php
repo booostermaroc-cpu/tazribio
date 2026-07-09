@@ -108,6 +108,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(AgentCommission::class);
     }
 
+    public function confirmedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'confirmed_by');
+    }
+
     public function confirmationLogs(): HasMany
     {
         return $this->hasMany(OrderConfirmationLog::class);

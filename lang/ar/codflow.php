@@ -299,6 +299,7 @@ return [
         'ameex_business_missing' => 'معرف المرسل Ameex مفقود. الناقلون → AMEEX: انقر « مزامنة المرسلين ».',
         'ameex_sender_required' => 'Ameex يتطلب مرسلاً صالحاً. أدخل business_id (مختلف عن C-Api-Id).',
         'ameex_business_id' => 'معرف المرسل / Hub Ameex',
+        'ameex_business_saved' => 'محفوظ',
         'ameex_business_id_help' => 'اختر hub Ameex (مثل AGADIR HUB PRINCIPAL)، وليس Tazri bio فقط. انقر « مزامنة المرسلين » ثم اختر الـ hub.',
         'ameex_sync_businesses' => 'مزامنة المرسلين',
         'ameex_sync_group' => 'مزامنة Ameex',

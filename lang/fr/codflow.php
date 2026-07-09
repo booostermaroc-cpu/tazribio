@@ -665,6 +665,7 @@ return [
         'ameex_business_missing' => 'ID expéditeur Ameex manquant. Transporteurs → AMEEX : cliquez « Synchroniser les expéditeurs » ou renseignez business_id (Mes entreprises Ameex).',
         'ameex_sender_required' => 'Ameex exige un expéditeur valide. Renseignez business_id dans le transporteur AMEEX (différent du C-Api-Id).',
         'ameex_business_id' => 'ID expéditeur Ameex (business)',
+        'ameex_business_saved' => 'sauvegardé',
         'ameex_business_id_help' => 'Sélectionnez le hub Ameex (ex. AGADIR HUB PRINCIPAL), pas seulement Tazri bio. Cliquez « Synchroniser les expéditeurs » puis choisissez le hub dans la liste.',
         'ameex_sync_businesses' => 'Synchroniser les expéditeurs',
         'ameex_sync_group' => 'Synchronisation Ameex',

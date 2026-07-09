@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class DeliveryCompanyForm
@@ -59,18 +60,20 @@ class DeliveryCompanyForm
                     Select::make('ameex_business_id')
                         ->label(__('codflow.delivery.ameex_business_id'))
                         ->helperText(__('codflow.delivery.ameex_business_id_help'))
-                        ->options(function ($livewire): array {
-                            $record = $livewire->record ?? null;
+                        ->options(function (Get $get): array {
+                            $options = $get('ameex_businesses_options');
 
-                            if ($record === null) {
-                                return [];
+                            if (! is_array($options)) {
+                                $options = [];
                             }
 
-                            $map = is_array($record->api_settings['ameex_businesses_map'] ?? null)
-                                ? $record->api_settings['ameex_businesses_map']
-                                : [];
+                            $current = trim((string) ($get('ameex_business_id') ?? ''));
 
-                            return $map;
+                            if (filled($current) && ! array_key_exists($current, $options)) {
+                                $options[$current] = $current.' ('.__('codflow.delivery.ameex_business_saved').')';
+                            }
+
+                            return $options;
                         })
                         ->searchable()
                         ->columnSpanFull(),

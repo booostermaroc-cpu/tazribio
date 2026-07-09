@@ -13,6 +13,9 @@ trait InteractsWithAmeexBusinessIdForm
         $settings = is_array($data['api_settings'] ?? null) ? $data['api_settings'] : [];
         $data['ameex_business_id'] = (string) ($settings['business_id'] ?? '');
         $data['ameex_send_without_stock'] = in_array(strtoupper((string) ($settings['send_without_stock_check'] ?? '0')), ['1', 'TRUE', 'YES', 'OUI'], true);
+        $data['ameex_businesses_options'] = is_array($settings['ameex_businesses_map'] ?? null)
+            ? $settings['ameex_businesses_map']
+            : [];
         $data['api_settings'] = $this->sanitizeApiSettings($settings);
 
         return $data;
@@ -32,7 +35,7 @@ trait InteractsWithAmeexBusinessIdForm
 
         $settings['send_without_stock_check'] = ($data['ameex_send_without_stock'] ?? false) ? '1' : '0';
 
-        unset($data['ameex_business_id'], $data['ameex_send_without_stock']);
+        unset($data['ameex_business_id'], $data['ameex_send_without_stock'], $data['ameex_businesses_options']);
 
         $data['api_settings'] = $this->sanitizeApiSettings($settings);
 

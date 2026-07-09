@@ -69,6 +69,21 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         return null;
     }
 
+    public function businessDisplayName(DeliveryCompany $company): ?string
+    {
+        $businessId = $this->businessId($company);
+
+        if (blank($businessId)) {
+            return null;
+        }
+
+        $map = is_array($company->api_settings['ameex_businesses_map'] ?? null)
+            ? $company->api_settings['ameex_businesses_map']
+            : [];
+
+        return $map[$businessId] ?? null;
+    }
+
     /** @return list<string> */
     public function suggestedBusinessesPaths(DeliveryCompany $company): array
     {
@@ -801,6 +816,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         $order->loadMissing(['client', 'items.product']);
 
         $multipart = [
+            ['name' => 'type', 'contents' => 'STOCK'],
             ['name' => 'business', 'contents' => $businessId],
             ['name' => 'order_num', 'contents' => (string) $order->order_number],
             ['name' => 'tracking_number', 'contents' => (string) $shipment->tracking_number],
@@ -809,13 +825,11 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'city', 'contents' => (string) $order->city],
             ['name' => 'address', 'contents' => (string) $order->address],
             ['name' => 'comment', 'contents' => (string) ($order->notes ?? '')],
-            ['name' => 'product', 'contents' => $this->productSummary($order)],
+            ['name' => 'product', 'contents' => $this->sendsWithoutStockCheck($company)
+                ? $this->productSummaryWithCodQuantities($order)
+                : $this->productSummary($order)],
             ['name' => 'cod', 'contents' => (string) $order->final_amount],
         ];
-
-        if ($this->sendsWithoutStockCheck($company)) {
-            return $multipart;
-        }
 
         return $this->withProductReferences($multipart, $order);
     }
@@ -892,7 +906,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     {
         $order->loadMissing(['client', 'items.product']);
         $settings = $company->api_settings ?? [];
-        $productSummary = $this->productSummary($order);
+        $useCodQuantity = $this->sendsWithoutStockCheck($company);
+
         $multipart = [
             ['name' => 'type', 'contents' => 'STOCK'],
             ['name' => 'business', 'contents' => $businessId],
@@ -907,14 +922,12 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'city', 'contents' => $cityId],
             ['name' => 'address', 'contents' => (string) $order->address],
             ['name' => 'comment', 'contents' => (string) ($order->notes ?? '')],
-            ['name' => 'product', 'contents' => $productSummary],
+            ['name' => 'product', 'contents' => $useCodQuantity
+                ? $this->productSummaryWithCodQuantities($order)
+                : $this->productSummary($order)],
             ['name' => 'cod', 'contents' => (string) $order->final_amount],
             ['name' => 'staff', 'contents' => ''],
         ];
-
-        if ($this->sendsWithoutStockCheck($company)) {
-            return $multipart;
-        }
 
         return $this->withProductReferences($multipart, $order);
     }
@@ -928,24 +941,24 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      */
     protected function withProductReferences(array $multipart, Order $order): array
     {
-        foreach ($order->items->values() as $index => $item) {
+        $productIndex = 0;
+
+        foreach ($order->items as $item) {
             $product = $item->product;
 
             if ($product === null) {
                 continue;
             }
 
-            // STOCK mode: products[n][ref] only — never products[n][id] (SIMPLE mode).
-            $reference = filled(trim((string) $product->ameex_reference))
-                ? trim((string) $product->ameex_reference)
-                : trim((string) $product->sku);
+            $reference = $product->ameexStockReference();
 
             if (blank($reference)) {
                 continue;
             }
 
-            $multipart[] = ['name' => "products[{$index}][ref]", 'contents' => $reference];
-            $multipart[] = ['name' => "products[{$index}][qty]", 'contents' => (string) $item->quantity];
+            $multipart[] = ['name' => "products[{$productIndex}][ref]", 'contents' => $reference];
+            $multipart[] = ['name' => "products[{$productIndex}][qty]", 'contents' => (string) $item->quantity];
+            $productIndex++;
         }
 
         return $multipart;
@@ -980,6 +993,27 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ->map(fn ($item): string => trim(($item->product?->name ?? __('codflow.delivery.ameex_default_product')).' x'.$item->quantity))
             ->filter()
             ->implode(', ');
+    }
+
+    /**
+     * Product description for Ameex using COD quantities (source of truth).
+     */
+    protected function productSummaryWithCodQuantities(Order $order): string
+    {
+        return $order->items
+            ->map(function ($item): string {
+                $name = trim((string) ($item->product?->name ?? __('codflow.delivery.ameex_default_product')));
+                $reference = trim((string) ($item->product?->ameexStockReference() ?? ''));
+                $qty = (int) $item->quantity;
+
+                if (filled($reference)) {
+                    return "{$reference} | {$name} x{$qty}";
+                }
+
+                return "{$name} x{$qty}";
+            })
+            ->filter()
+            ->implode(' ; ');
     }
 
     protected function yesNoSetting(mixed $value): string

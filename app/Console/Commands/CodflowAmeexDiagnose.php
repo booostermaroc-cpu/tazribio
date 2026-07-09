@@ -50,6 +50,8 @@ class CodflowAmeexDiagnose extends Command
             ['api_id résolu', $resolvedApiId],
             ['api_token longueur', $tokenLen > 0 ? "{$tokenLen} caractères" : 'MANQUANT'],
             ['business_id résolu', $ameex->businessId($company) ?? '(manquant)'],
+            ['hub / expéditeur', $ameex->businessDisplayName($company) ?? '(nom inconnu — synchronisez les expéditeurs)'],
+            ['send_without_stock_check', $ameex->sendsWithoutStockCheck($company) ? 'oui' : 'non'],
             ['is_configured', $ameex->isConfigured($company) ? 'oui' : 'NON'],
             ['villes synchronisées', (string) $citiesCount],
             ['colonne ameex_reference', Schema::hasColumn('products', 'ameex_reference') ? 'oui' : 'NON — lancer migrate'],
@@ -77,6 +79,10 @@ class CodflowAmeexDiagnose extends Command
             $this->warn('business_id manquant : cliquez « Synchroniser les expéditeurs » ou renseignez-le depuis Ameex → Mes entreprises.');
         } elseif (($settings['business_id'] ?? null) === $company->api_username) {
             $this->warn('business_id est identique au C-Api-Id. Utilisez l\'ID expéditeur Ameex (Mes entreprises), pas l\'ID API.');
+        } elseif (blank($ameex->businessDisplayName($company))) {
+            $this->warn('business_id configuré mais absent de la liste synchronisée. Re-synchronisez les expéditeurs ou vérifiez l\'ID hub.');
+        } elseif (! str_contains(strtoupper((string) $ameex->businessDisplayName($company)), 'HUB')) {
+            $this->warn('L\'expéditeur sélectionné ne semble pas être un hub (ex. AGADIR HUB PRINCIPAL). Sans hub, Ameex affiche Produits = 0.');
         }
 
         $this->newLine();

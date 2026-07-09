@@ -38,7 +38,8 @@ class DeliveryCompanyForm
                         ->label(Labels::field('api_base_url'))
                         ->url()
                         ->default(AmeexDeliveryService::DEFAULT_BASE_URL)
-                        ->placeholder(AmeexDeliveryService::DEFAULT_BASE_URL),
+                        ->placeholder(AmeexDeliveryService::DEFAULT_BASE_URL)
+                        ->columnSpanFull(),
                     TextInput::make('api_username')
                         ->label('C-Api-Id')
                         ->helperText(__('codflow.delivery.ameex_api_id_help')),
@@ -49,15 +50,44 @@ class DeliveryCompanyForm
                         ->autocomplete('new-password')
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->helperText(__('codflow.delivery.ameex_api_key_help')),
-                    TextInput::make('ameex_business_id')
+                ])
+                ->columns(2)
+                ->visible(fn ($get) => ($get('provider') ?? DeliveryProvider::Manual->value) !== DeliveryProvider::Manual->value)
+                ->columnSpanFull(),
+            Section::make(__('codflow.delivery.ameex_config_section'))
+                ->schema([
+                    Select::make('ameex_business_id')
                         ->label(__('codflow.delivery.ameex_business_id'))
                         ->helperText(__('codflow.delivery.ameex_business_id_help'))
-                        ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value),
+                        ->options(function ($livewire): array {
+                            $record = $livewire->record ?? null;
+
+                            if ($record === null) {
+                                return [];
+                            }
+
+                            $map = is_array($record->api_settings['ameex_businesses_map'] ?? null)
+                                ? $record->api_settings['ameex_businesses_map']
+                                : [];
+
+                            return $map;
+                        })
+                        ->searchable()
+                        ->columnSpanFull(),
                     Toggle::make('ameex_send_without_stock')
                         ->label(__('codflow.delivery.ameex_send_without_stock'))
                         ->helperText(__('codflow.delivery.ameex_send_without_stock_help'))
-                        ->default(false)
-                        ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value),
+                        ->default(false),
+                    Placeholder::make('ameex_auto_sync_hint')
+                        ->label('')
+                        ->content(__('codflow.delivery.ameex_auto_sync_scheduled'))
+                        ->columnSpanFull(),
+                ])
+                ->columns(2)
+                ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value)
+                ->columnSpanFull(),
+            Section::make(__('codflow.delivery.ameex_advanced_section'))
+                ->schema([
                     KeyValue::make('api_settings')
                         ->label(__('codflow.ui.api_settings'))
                         ->keyLabel(__('codflow.ui.key'))
@@ -77,13 +107,7 @@ class DeliveryCompanyForm
                             'cities_list_path' => '/customer/Delivery/Cities',
                         ])
                         ->columnSpanFull(),
-                    Placeholder::make('ameex_auto_sync_hint')
-                        ->label('')
-                        ->content(__('codflow.delivery.ameex_auto_sync_scheduled'))
-                        ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value)
-                        ->columnSpanFull(),
                 ])
-                ->columns(2)
                 ->visible(fn ($get) => ($get('provider') ?? DeliveryProvider::Manual->value) !== DeliveryProvider::Manual->value)
                 ->columnSpanFull(),
         ]);

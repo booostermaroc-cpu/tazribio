@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Support\DashboardLabels;
 use App\Filament\Support\EnumColumn;
 use App\Enums\OrderStatus;
 use App\Models\Order;
@@ -24,7 +25,7 @@ class LatestOrdersWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->heading(__('codflow.dashboard.charts.latest_orders'))
+            ->heading(DashboardLabels::get('charts.latest_orders'))
             ->query(
                 Order::query()
                     ->with(['client'])
@@ -37,23 +38,23 @@ class LatestOrdersWidget extends TableWidget
                     ->circular()
                     ->toggleable(),
                 TextColumn::make('order_number')
-                    ->label(__('codflow.dashboard.table.order'))
+                    ->label(DashboardLabels::get('table.order'))
                     ->formatStateUsing(fn (string $state): string => '#'.$state)
                     ->color('primary')
                     ->weight('bold')
                     ->icon('heroicon-o-shopping-bag'),
                 TextColumn::make('client.full_name')
-                    ->label(__('codflow.dashboard.table.client')),
+                    ->label(DashboardLabels::get('table.client')),
                 TextColumn::make('city')
-                    ->label(__('codflow.dashboard.table.city'))
+                    ->label(DashboardLabels::get('table.city'))
                     ->color('gray'),
                 TextColumn::make('final_amount')
-                    ->label(__('codflow.dashboard.table.amount'))
+                    ->label(DashboardLabels::get('table.amount'))
                     ->money('MAD')
                     ->weight('semibold'),
                 EnumColumn::badge('status', OrderStatus::class),
                 TextColumn::make('created_at')
-                    ->label(__('codflow.dashboard.table.date'))
+                    ->label(DashboardLabels::get('table.date'))
                     ->since()
                     ->color('gray'),
             ])

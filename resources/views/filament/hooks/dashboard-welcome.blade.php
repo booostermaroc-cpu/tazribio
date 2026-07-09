@@ -1,11 +1,12 @@
+@php use App\Filament\Support\DashboardLabels; @endphp
 <div class="codflow-dashboard-banner">
     <div class="codflow-dashboard-banner__inner">
         <div class="codflow-dashboard-banner__content">
             <h2 class="codflow-dashboard-banner__title">
-                {{ __('codflow.dashboard.banner.hello') }}, {{ auth()->user()?->name }} 👋
+                {{ DashboardLabels::get('banner.hello') }}, {{ auth()->user()?->name }} 👋
             </h2>
             <p class="codflow-dashboard-banner__subtitle">
-                {{ __('codflow.dashboard.banner.message') }}
+                {{ DashboardLabels::get('banner.message') }}
             </p>
         </div>
         <div class="codflow-dashboard-banner__date">

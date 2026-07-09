@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Support\DashboardLabels;
 use App\Filament\Support\DashboardMetrics;
 use Filament\Widgets\ChartWidget;
 
@@ -24,14 +25,14 @@ class RevenueEvolutionChartWidget extends ChartWidget
 
     public function getHeading(): ?string
     {
-        return __('codflow.dashboard.charts.revenue_evolution');
+        return DashboardLabels::get('charts.revenue_evolution');
     }
 
     protected function getFilters(): ?array
     {
         return [
-            '14' => __('codflow.dashboard.charts.filter_14'),
-            '30' => __('codflow.dashboard.charts.filter_30'),
+            '14' => DashboardLabels::get('charts.filter_14'),
+            '30' => DashboardLabels::get('charts.filter_30'),
         ];
     }
 
@@ -49,7 +50,7 @@ class RevenueEvolutionChartWidget extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => __('codflow.dashboard.charts.revenue_label'),
+                    'label' => DashboardLabels::get('charts.revenue_label'),
                     'data' => $series['data'],
                     'borderColor' => '#7c3aed',
                     'backgroundColor' => 'rgba(124, 58, 237, 0.12)',

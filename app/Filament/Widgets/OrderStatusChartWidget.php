@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Support\DashboardLabels;
 use App\Filament\Support\DashboardMetrics;
 use Filament\Widgets\ChartWidget;
 
@@ -23,7 +24,7 @@ class OrderStatusChartWidget extends ChartWidget
 
     public function getHeading(): ?string
     {
-        return __('codflow.dashboard.charts.status');
+        return DashboardLabels::get('charts.status');
     }
 
     protected function getType(): string
@@ -33,7 +34,9 @@ class OrderStatusChartWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $distribution = DashboardMetrics::snapshot()['orders_distribution'];
+        $distribution = DashboardLabels::labeledDistribution(
+            DashboardMetrics::snapshot()['orders_distribution'],
+        );
 
         return [
             'datasets' => [

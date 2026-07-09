@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Support\DashboardLabels;
 use App\Filament\Support\DashboardMetrics;
 use App\Support\CarrierStuckOrders;
 use Filament\Support\Icons\Heroicon;
@@ -16,9 +17,9 @@ class ParcelStatusOverviewWidget extends StatsOverviewWidget
 
     protected int|string|array $columnSpan = ['default' => 'full'];
 
-    public function getHeading(): ?string
+    protected function getHeading(): ?string
     {
-        return __('codflow.dashboard.parcel_status');
+        return DashboardLabels::get('parcel_status');
     }
 
     protected function getColumns(): int|array
@@ -35,32 +36,32 @@ class ParcelStatusOverviewWidget extends StatsOverviewWidget
         $metrics = DashboardMetrics::snapshot();
 
         return [
-            Stat::make(__('codflow.dashboard.delivered'), number_format($metrics['delivered']))
+            Stat::make(DashboardLabels::get('delivered'), number_format($metrics['delivered']))
                 ->description($metrics['delivered_trend']['text'])
                 ->descriptionColor($metrics['delivered_trend']['color'])
                 ->icon(Heroicon::OutlinedCheckBadge)
                 ->color('success')
                 ->url($this->ordersUrl(OrderStatus::Delivered)),
-            Stat::make(__('codflow.dashboard.returned'), number_format($metrics['returned']))
-                ->description(__('codflow.dashboard.distribution.returned'))
+            Stat::make(DashboardLabels::get('returned'), number_format($metrics['returned']))
+                ->description(DashboardLabels::get('distribution.returned'))
                 ->descriptionColor('warning')
                 ->icon(Heroicon::OutlinedArrowPathRoundedSquare)
                 ->color('warning')
                 ->url($this->ordersUrl(OrderStatus::Returned)),
-            Stat::make(__('codflow.dashboard.cancelled'), number_format($metrics['cancelled']))
-                ->description(__('codflow.dashboard.distribution.cancelled'))
+            Stat::make(DashboardLabels::get('cancelled'), number_format($metrics['cancelled']))
+                ->description(DashboardLabels::get('distribution.cancelled'))
                 ->descriptionColor('danger')
                 ->icon(Heroicon::OutlinedXCircle)
                 ->color('danger')
                 ->url($this->ordersUrl(OrderStatus::Cancelled)),
-            Stat::make(__('codflow.dashboard.shipped'), number_format($metrics['shipped']))
-                ->description(__('codflow.dashboard.shipped_hint'))
+            Stat::make(DashboardLabels::get('shipped'), number_format($metrics['shipped']))
+                ->description(DashboardLabels::get('shipped_hint'))
                 ->descriptionColor('primary')
                 ->icon(Heroicon::OutlinedTruck)
                 ->color('primary')
                 ->url($this->ordersUrl(OrderStatus::Shipped)),
-            Stat::make(__('codflow.dashboard.stuck_at_carrier'), number_format($metrics['stuck_at_carrier']))
-                ->description(__('codflow.dashboard.stuck_at_carrier_hint', [
+            Stat::make(DashboardLabels::get('stuck_at_carrier'), number_format($metrics['stuck_at_carrier']))
+                ->description(DashboardLabels::get('stuck_at_carrier_hint', [
                     'count' => number_format($metrics['stuck_at_carrier']),
                     'days' => CarrierStuckOrders::thresholdDays(),
                 ]))

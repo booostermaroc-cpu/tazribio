@@ -3,6 +3,7 @@
 namespace App\Filament\Support;
 
 use App\Enums\OrderStatus;
+use App\Filament\Support\DashboardLabels;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\OrderProfitService;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardMetrics
 {
-    public const CACHE_KEY = 'codflow.dashboard.metrics';
+    public const CACHE_KEY = 'codflow.dashboard.metrics.v2';
 
     public const CACHE_TTL = 180;
 
@@ -106,11 +107,11 @@ class DashboardMetrics
             'delivered_trend' => self::formatTrend($currentMonthDelivered, $prevMonthDelivered),
             'revenue_trend' => self::formatTrend($currentMonthRevenue, $prevMonthRevenue),
             'orders_distribution' => [
-                __('codflow.dashboard.distribution.delivered') => $delivered,
-                __('codflow.dashboard.distribution.returned') => $returned,
-                __('codflow.dashboard.distribution.cancelled') => $cancelled,
-                __('codflow.dashboard.distribution.stuck_at_carrier') => $stuckAtCarrier,
-                __('codflow.dashboard.distribution.in_progress') => $inProgressExcludingStuck,
+                'delivered' => $delivered,
+                'returned' => $returned,
+                'cancelled' => $cancelled,
+                'stuck_at_carrier' => $stuckAtCarrier,
+                'in_progress' => $inProgressExcludingStuck,
             ],
             'revenue_per_day_14' => self::revenuePerDay(14),
             'revenue_per_day_30' => self::revenuePerDay(30),
@@ -124,7 +125,7 @@ class DashboardMetrics
     {
         if ($previous <= 0) {
             return [
-                'text' => '— '.__('codflow.dashboard.vs_last_month'),
+                'text' => '— '.DashboardLabels::get('vs_last_month'),
                 'color' => 'gray',
             ];
         }
@@ -133,7 +134,7 @@ class DashboardMetrics
         $arrow = $percent >= 0 ? '↑' : '↓';
 
         return [
-            'text' => $arrow.' '.number_format(abs($percent), 1).'% '.__('codflow.dashboard.vs_last_month'),
+            'text' => $arrow.' '.number_format(abs($percent), 1).'% '.DashboardLabels::get('vs_last_month'),
             'color' => $percent >= 0 ? 'success' : 'danger',
         ];
     }

@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Orders\OrderResource;
+use App\Filament\Support\DashboardLabels;
 use App\Filament\Support\DashboardMetrics;
 use App\Services\SettingService;
 use Filament\Support\Icons\Heroicon;
@@ -33,11 +34,11 @@ class CodFlowStatsOverview extends StatsOverviewWidget
         $metrics = DashboardMetrics::snapshot();
         $settings = SettingService::get();
         $profitHint = $settings->use_manual_profit_total
-            ? __('codflow.dashboard.profit_manual_hint')
-            : __('codflow.dashboard.profit_hint');
+            ? DashboardLabels::get('profit_manual_hint')
+            : DashboardLabels::get('profit_hint');
 
         return [
-            Stat::make(__('codflow.dashboard.total_orders'), number_format($metrics['total_orders']))
+            Stat::make(DashboardLabels::get('total_orders'), number_format($metrics['total_orders']))
                 ->description($metrics['orders_trend']['text'])
                 ->descriptionColor($metrics['orders_trend']['color'])
                 ->descriptionIcon(Heroicon::OutlinedArrowTrendingUp)

@@ -180,6 +180,12 @@ class AmeexResponseParser
             return __('codflow.delivery.ameex_sender_required');
         }
 
+        if (is_string($message) && self::isInsufficientStockError($message)) {
+            $product = trim(strip_tags($message));
+
+            return __('codflow.delivery.ameex_stock_insufficient', ['product' => $product]);
+        }
+
         if (is_string($message)) {
             return trim(strip_tags($message));
         }
@@ -194,6 +200,15 @@ class AmeexResponseParser
         return str_contains($normalized, 'expéditeur')
             || str_contains($normalized, 'expediteur')
             || str_contains($normalized, 'choisir l');
+    }
+
+    public static function isInsufficientStockError(string $message): bool
+    {
+        $normalized = mb_strtolower($message);
+
+        return str_contains($normalized, 'pas suffisante')
+            || str_contains($normalized, 'insufficient')
+            || str_contains($normalized, 'stock insuffisant');
     }
 
     public static function extractPickupRequestRef(mixed $raw): ?string

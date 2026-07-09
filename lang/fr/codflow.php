@@ -155,8 +155,8 @@ return [
         'contact_call' => 'Appeler le client',
         'default_client_name' => 'client',
         'whatsapp_message' => <<<'MSG'
-Bonjour, votre commande est bien emballée et, inchallah, elle correspond à votre demande et est en parfait état.
-Comme convenu, demain inchallah ou au plus tard après, le livreur vous contactera pour la livrer (vous avez le droit de vérifier le colis avant de payer le livreur).
+السلام عليكم، هاهي لاكموند راه bien emballé وداك الخير انشاءلله راه كيما بغيتيه وبأحسن حلة
+كيما قلتليك غدا انشاءلله ولا بعدو كحد أقصى غايتاصل بيك الليفرور باش ايجيبها ليك ( وراه عندك الحق تقلبها قبل ماتخلص الليفرور ).
 MSG,
         'confirm_modal_title' => 'Confirmer le colis',
         'confirm_modal_description' => 'Comment avez-vous contacté le client pour confirmer ce colis ?',

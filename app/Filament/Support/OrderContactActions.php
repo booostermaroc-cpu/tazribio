@@ -10,6 +10,11 @@ use Filament\Support\Icons\Heroicon;
 
 class OrderContactActions
 {
+    private const WHATSAPP_MESSAGE = <<<'MSG'
+السلام عليكم، هاهي لاكموند راه bien emballé وداك الخير انشاءلله راه كيما بغيتيه وبأحسن حلة
+كيما قلتليك غدا انشاءلله ولا بعدو كحد أقصى غايتاصل بيك الليفرور باش ايجيبها ليك ( وراه عندك الحق تقلبها قبل ماتخلص الليفرور ).
+MSG;
+
     public static function whatsAppAction(?string $phone, ?string $message = null): Action
     {
         return Action::make('contactWhatsApp')
@@ -38,11 +43,11 @@ class OrderContactActions
 
     public static function orderMessage(Order $order): string
     {
-        return trim(CodflowLabels::order('whatsapp_message'));
+        return trim(self::WHATSAPP_MESSAGE);
     }
 
     public static function newOrderMessage(?string $orderNumber, ?float $amount, ?string $clientName = null): string
     {
-        return trim(CodflowLabels::order('whatsapp_message'));
+        return trim(self::WHATSAPP_MESSAGE);
     }
 }

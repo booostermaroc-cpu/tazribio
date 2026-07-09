@@ -138,7 +138,13 @@ class DeliveryIntegrationService
                 ]);
             }
 
-            return ['success' => true, 'message' => $result['message']];
+            $message = $result['message'];
+
+            if ($company->provider === DeliveryProvider::Ameex) {
+                $message = $this->syncAmeexOrderAfterParcel($company, $shipment->fresh(['order.client', 'order.items.product']), $message);
+            }
+
+            return ['success' => true, 'message' => $message];
         }
 
         try {
@@ -387,6 +393,31 @@ class DeliveryIntegrationService
             $company,
             $shipment->fresh(['order.client', 'order.items.product']),
         );
+    }
+
+    protected function syncAmeexOrderAfterParcel(DeliveryCompany $company, Shipment $shipment, string $parcelMessage): string
+    {
+        $ameex = app(AmeexDeliveryService::class);
+
+        if ($ameex->isAmeexOrderSynced($shipment)) {
+            return $parcelMessage;
+        }
+
+        $orderResult = $this->sendShipmentOrderToAmeex($shipment);
+
+        if ($orderResult['success'] ?? false) {
+            return __('codflow.delivery.ameex_send_and_order_success');
+        }
+
+        Log::warning('Ameex auto-create order after parcel failed', [
+            'shipment_id' => $shipment->id,
+            'order_id' => $shipment->order_id,
+            'message' => $orderResult['message'] ?? __('codflow.delivery.api_error'),
+        ]);
+
+        return $parcelMessage.' '.__('codflow.delivery.ameex_order_auto_failed', [
+            'reason' => $orderResult['message'] ?? __('codflow.delivery.api_error'),
+        ]);
     }
 
     /** @return array{success: bool, message: string, company?: DeliveryCompany} */

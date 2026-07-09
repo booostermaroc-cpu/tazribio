@@ -472,6 +472,7 @@ class CodflowVerifyMvp extends Command
                 $ameexOrderShipment->fresh(['order.client', 'order.items.product']),
                 $order->fresh(['client', 'items.product']),
                 'test-api-id',
+                '1',
             )
         );
         $ameexOrderPayloadUsesRefs = ($ameexOrderPayload['products[0][ref]'] ?? null) === $product->fresh()->ameexStockReference()

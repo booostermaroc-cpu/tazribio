@@ -91,7 +91,7 @@ class SettingForm
                             ->numeric()
                             ->prefix('MAD')
                             ->minValue(0)
-                            ->default(0),
+                            ->default(15),
                         Select::make('default_payment_method')
                             ->label(Labels::field('default_payment_method'))
                             ->options(PaymentMethod::options())

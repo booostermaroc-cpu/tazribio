@@ -12,7 +12,7 @@ class SettingService
     {
         return Setting::query()->firstOrCreate([], [
             'company_name' => 'Tazri Bio',
-            'default_delivery_fee' => 30,
+            'default_delivery_fee' => 15,
             'carrier_fee_rules' => CarrierFeeService::defaultRules(),
             'order_prefix' => 'ORD',
             'invoice_prefix' => 'INV',

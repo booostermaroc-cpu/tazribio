@@ -40,7 +40,7 @@ class OrderProfitService
             ->value('profit');
 
         if (SettingService::get()->profit_include_delivery_fee) {
-            $margin += (float) $order->delivery_fee;
+            $margin -= (float) $order->delivery_fee;
         }
 
         $margin -= (float) $order->carrier_fee_amount;

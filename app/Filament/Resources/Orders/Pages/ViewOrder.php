@@ -99,7 +99,7 @@ class ViewOrder extends ViewRecord
                         TextInput::make('city')->default($record->city)->required(),
                         TextInput::make('address')->default($record->address)->required(),
                         Textarea::make('comment')->default($record->notes),
-                        TextInput::make('price')->numeric()->default($record->final_amount)->required(),
+                        TextInput::make('price')->numeric()->default($record->carrierCodAmount())->required(),
                     ])
                     ->action(function (Order $record, array $data): void {
                         $shipment = $record->shipments()->first() ?? $record->shipment;

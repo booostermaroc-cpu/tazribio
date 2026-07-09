@@ -43,7 +43,7 @@ class OrderContactActions
         return __('codflow.order.whatsapp_message', [
             'name' => $name,
             'order' => $order->order_number,
-            'amount' => number_format((float) $order->final_amount, 2, ',', ' '),
+            'amount' => number_format($order->carrierCodAmount(), 2, ',', ' '),
         ]);
     }
 

@@ -58,7 +58,14 @@ class OrderInfolist
                         Section::make(__('codflow.order.section_amounts'))
                             ->schema([
                                 TextEntry::make('total_amount')->money('MAD'),
-                                TextEntry::make('delivery_fee')->money('MAD'),
+                                TextEntry::make('delivery_fee')
+                                    ->label(Labels::field('delivery_fee'))
+                                    ->money('MAD'),
+                                TextEntry::make('carrier_cod_amount')
+                                    ->label(__('codflow.order.carrier_cod_amount'))
+                                    ->state(fn ($record) => $record->carrierCodAmount())
+                                    ->money('MAD')
+                                    ->helperText(__('codflow.order.carrier_cod_amount_hint')),
                                 TextEntry::make('carrier_fee_amount')
                                     ->label(__('codflow.fields.carrier_fee_amount'))
                                     ->money('MAD')

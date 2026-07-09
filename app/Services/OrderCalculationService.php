@@ -6,9 +6,9 @@ class OrderCalculationService
 {
     /**
      * @param  array<int, array{quantity?: float|int, unit_price?: float|int, total_price?: float|int}>  $items
-     * @return array{total_amount: float, final_amount: float}
+     * @return array{total_amount: float, final_amount: float, carrier_cod_amount: float}
      */
-    public function calculateTotals(array $items, float $deliveryFee = 0, float $discount = 0): array
+    public function calculateTotals(array $items, float $orderCommission = 0, float $discount = 0): array
     {
         $totalAmount = 0.0;
 
@@ -23,11 +23,15 @@ class OrderCalculationService
         }
 
         $totalAmount = round($totalAmount, 2);
-        $finalAmount = round(max(0, $totalAmount + $deliveryFee - $discount), 2);
+        $orderCommission = max(0, round($orderCommission, 2));
+        $discount = max(0, round($discount, 2));
+        $finalAmount = round(max(0, $totalAmount - $orderCommission - $discount), 2);
+        $carrierCodAmount = round(max(0, $totalAmount - $discount), 2);
 
         return [
             'total_amount' => $totalAmount,
             'final_amount' => $finalAmount,
+            'carrier_cod_amount' => $carrierCodAmount,
         ];
     }
 

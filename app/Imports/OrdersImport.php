@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Rules\MoroccanPhone;
+use App\Services\OrderCalculationService;
 use App\Services\SettingService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -54,7 +55,13 @@ class OrdersImport implements ToCollection, WithHeadingRow
             $totalAmount = (float) ($row['total_amount'] ?? ($quantity * $unitPrice));
             $deliveryFee = (float) ($row['delivery_fee'] ?? $settings->default_delivery_fee);
             $discount = (float) ($row['discount'] ?? 0);
-            $finalAmount = (float) ($row['final_amount'] ?? ($totalAmount + $deliveryFee - $discount));
+            $totals = app(OrderCalculationService::class)->calculateTotals(
+                [['quantity' => $quantity, 'total_price' => $totalAmount]],
+                $deliveryFee,
+                $discount,
+            );
+            $totalAmount = $totals['total_amount'] > 0 ? $totals['total_amount'] : $totalAmount;
+            $finalAmount = (float) ($row['final_amount'] ?? $totals['final_amount']);
 
             $order = Order::create([
                 'order_number' => $row['order_number'] ?? $settings->order_prefix.'-'.now()->format('Ymd').'-'.strtoupper(Str::random(4)),

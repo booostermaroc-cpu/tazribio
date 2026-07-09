@@ -1295,7 +1295,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'product', 'contents' => $stockMode
                 ? $this->productSummary($order)
                 : $this->productSummaryWithCodQuantities($order)],
-            ['name' => 'cod', 'contents' => (string) $order->final_amount],
+            ['name' => 'cod', 'contents' => (string) $order->carrierCodAmount()],
         ];
 
         if ($stockMode) {
@@ -1397,7 +1397,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'product', 'contents' => $stockMode
                 ? $this->productSummary($order)
                 : $this->productSummaryWithCodQuantities($order)],
-            ['name' => 'cod', 'contents' => (string) $order->final_amount],
+            ['name' => 'cod', 'contents' => (string) $order->carrierCodAmount()],
             ['name' => 'staff', 'contents' => ''],
         ];
 

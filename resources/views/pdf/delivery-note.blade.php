@@ -85,8 +85,8 @@
             <td class="value">{{ number_format((float) $order->total_amount, 2, ',', ' ') }} MAD</td>
         </tr>
         <tr>
-            <td class="label">Frais de livraison</td>
-            <td class="value">{{ number_format((float) $order->delivery_fee, 2, ',', ' ') }} MAD</td>
+            <td class="label">Commission commande</td>
+            <td class="value">-{{ number_format((float) $order->delivery_fee, 2, ',', ' ') }} MAD</td>
         </tr>
         @if((float) $order->discount > 0)
             <tr>
@@ -95,8 +95,12 @@
             </tr>
         @endif
         <tr>
-            <td class="label"><strong>Total à payer (COD)</strong></td>
-            <td class="value"><strong>{{ number_format((float) $order->final_amount, 2, ',', ' ') }} MAD</strong></td>
+            <td class="label">Montant net colis</td>
+            <td class="value">{{ number_format((float) $order->final_amount, 2, ',', ' ') }} MAD</td>
+        </tr>
+        <tr>
+            <td class="label"><strong>Total COD client (Ameex)</strong></td>
+            <td class="value"><strong>{{ number_format((float) $order->carrierCodAmount(), 2, ',', ' ') }} MAD</strong></td>
         </tr>
     </table>
 

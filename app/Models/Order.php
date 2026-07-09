@@ -77,6 +77,12 @@ class Order extends Model
         return $this->payment_method === PaymentMethod::Cod;
     }
 
+    /** Montant COD envoyé au transporteur (prix produit réel, sans commission commande). */
+    public function carrierCodAmount(): float
+    {
+        return round(max(0, (float) $this->total_amount - (float) $this->discount), 2);
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

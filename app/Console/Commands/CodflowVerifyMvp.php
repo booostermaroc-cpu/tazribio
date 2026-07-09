@@ -298,9 +298,9 @@ class CodflowVerifyMvp extends Command
             'order_number' => 'MVP-'.Str::upper(Str::random(6)),
             'client_id' => $client->id,
             'total_amount' => 50,
-            'delivery_fee' => 30,
+            'delivery_fee' => 15,
             'discount' => 0,
-            'final_amount' => 80,
+            'final_amount' => 35,
             'status' => OrderStatus::New,
             'payment_status' => PaymentStatus::Unpaid,
             'source' => 'other',
@@ -335,8 +335,10 @@ class CodflowVerifyMvp extends Command
             ['quantity' => 2, 'unit_price' => 100],
             ['quantity' => 1, 'unit_price' => 50],
         ];
-        $totals = $calc->calculateTotals($items, 30, 10);
-        $calcOk = $totals['total_amount'] === 250.0 && $totals['final_amount'] === 270.0;
+        $totals = $calc->calculateTotals($items, 15, 10);
+        $calcOk = $totals['total_amount'] === 250.0
+            && $totals['final_amount'] === 225.0
+            && $totals['carrier_cod_amount'] === 240.0;
 
         $paymentBlocked = false;
         try {
@@ -650,7 +652,7 @@ class CodflowVerifyMvp extends Command
 
         return [
             'erp_order_calculation' => $calcOk,
-            'erp_final_amount' => $totals['final_amount'] === 270.0,
+            'erp_final_amount' => $totals['final_amount'] === 225.0,
             'erp_payment_validation' => $paymentBlocked && $paymentOk,
             'erp_commission_calculation' => $commissionCreated,
             'erp_barcode_generation' => $barcodeOk,

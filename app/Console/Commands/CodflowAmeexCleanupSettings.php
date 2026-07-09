@@ -16,6 +16,8 @@ class CodflowAmeexCleanupSettings extends Command
     protected array $keysToRemove = [
         'ameex_cities',
         'ameex_businesses',
+        'ameex_products',
+        'ameex_status_list',
     ];
 
     public function handle(): int

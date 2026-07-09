@@ -672,7 +672,7 @@ return [
         'ameex_config_section' => 'Configuration Ameex',
         'ameex_advanced_section' => 'Paramètres API avancés',
         'ameex_sync_summary' => 'Données synchronisées',
-        'ameex_sync_summary_text' => ':hubs hub(s) Ameex disponible(s). Utilisez « Synchronisation Ameex » pour mettre à jour villes et expéditeurs.',
+        'ameex_sync_summary_text' => ':hubs hub(s) et :cities ville(s) Ameex synchronisée(s). Utilisez « Synchronisation Ameex » pour mettre à jour.',
         'ameex_businesses_sync_success' => ':count expéditeur(s) Ameex synchronisé(s).',
         'ameex_businesses_sync_failed' => 'Impossible de récupérer les expéditeurs Ameex. Renseignez business_id manuellement depuis le tableau de bord Ameex. Endpoints testés : :paths',
         'ameex_order_endpoint_missing' => 'Endpoint Commandes Ameex manquant. Renseignez create_order_path dans les paramètres API du transporteur.',

@@ -265,8 +265,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             }
 
             $settings = $company->api_settings ?? [];
-            $settings['ameex_status_list'] = $json;
             $settings['ameex_status_list_synced_at'] = now()->toIso8601String();
+            unset($settings['ameex_status_list']);
             $company->update(['api_settings' => $settings]);
 
             return [
@@ -311,8 +311,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
                 $settings = $company->api_settings ?? [];
                 $settings['products_list_path'] = $path;
-                $settings['ameex_products'] = $raw;
                 $settings['ameex_products_synced_at'] = now()->toIso8601String();
+                unset($settings['ameex_products']);
                 $company->update(['api_settings' => $settings]);
 
                 return [

@@ -6,7 +6,6 @@ use App\Enums\DeliveryProvider;
 use App\Filament\Support\Labels;
 use App\Services\Delivery\AmeexDeliveryService;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -54,11 +53,13 @@ class DeliveryCompanyForm
                         ->helperText(__('codflow.delivery.ameex_api_key_help')),
                 ])
                 ->columns(2)
-                ->visible(fn ($get) => ($get('provider') ?? DeliveryProvider::Manual->value) !== DeliveryProvider::Manual->value)
+                ->visible(fn (Get $get): bool => self::isApiProvider($get('provider')))
                 ->columnSpanFull(),
             Section::make(__('codflow.delivery.ameex_config_section'))
                 ->schema([
                     Hidden::make('ameex_businesses_options_json')
+                        ->dehydrated(false),
+                    Hidden::make('ameex_cities_count')
                         ->dehydrated(false),
                     Select::make('ameex_business_id')
                         ->label(__('codflow.delivery.ameex_business_id'))
@@ -86,44 +87,39 @@ class DeliveryCompanyForm
                         ->content(function (Get $get): string {
                             $decoded = json_decode((string) ($get('ameex_businesses_options_json') ?? '{}'), true);
                             $options = is_array($decoded) ? $decoded : [];
+                            $cities = (int) ($get('ameex_cities_count') ?? 0);
 
                             return __('codflow.delivery.ameex_sync_summary_text', [
                                 'hubs' => count($options),
+                                'cities' => $cities,
                             ]);
                         })
                         ->columnSpanFull(),
                     Placeholder::make('ameex_auto_sync_hint')
-                        ->label('')
                         ->content(__('codflow.delivery.ameex_auto_sync_scheduled'))
                         ->columnSpanFull(),
                 ])
                 ->columns(2)
-                ->visible(fn ($get) => ($get('provider') ?? null) === DeliveryProvider::Ameex->value)
-                ->columnSpanFull(),
-            Section::make(__('codflow.delivery.ameex_advanced_section'))
-                ->schema([
-                    KeyValue::make('api_settings')
-                        ->label(__('codflow.ui.api_settings'))
-                        ->keyLabel(__('codflow.ui.key'))
-                        ->valueLabel(__('codflow.ui.value'))
-                        ->addActionLabel(__('codflow.ui.add'))
-                        ->default([
-                            'api_id' => '',
-                            'default_city_id' => '',
-                            'create_parcel_path' => '/customer/Delivery/Parcels/Action/Type/Add',
-                            'create_order_path' => '',
-                            'products_list_path' => '/customer/Delivery/Products',
-                            'track_parcel_path' => AmeexDeliveryService::PATH_MASS_TRACKING,
-                            'info_parcel_path' => AmeexDeliveryService::PATH_MASS_INFO,
-                            'status_list_path' => AmeexDeliveryService::PATH_STATUS_LIST,
-                            'relaunch_parcel_path' => AmeexDeliveryService::PATH_RELAUNCH,
-                            'relaunch_new_parcel_path' => AmeexDeliveryService::PATH_RELAUNCH_NEW,
-                            'cities_list_path' => '/customer/Delivery/Cities',
-                        ])
-                        ->columnSpanFull(),
-                ])
-                ->visible(fn ($get) => ($get('provider') ?? DeliveryProvider::Manual->value) !== DeliveryProvider::Manual->value)
+                ->visible(fn (Get $get): bool => self::isAmeexProvider($get('provider')))
                 ->columnSpanFull(),
         ]);
+    }
+
+    protected static function isApiProvider(mixed $provider): bool
+    {
+        if ($provider instanceof DeliveryProvider) {
+            return $provider !== DeliveryProvider::Manual;
+        }
+
+        return filled($provider) && (string) $provider !== DeliveryProvider::Manual->value;
+    }
+
+    protected static function isAmeexProvider(mixed $provider): bool
+    {
+        if ($provider instanceof DeliveryProvider) {
+            return $provider === DeliveryProvider::Ameex;
+        }
+
+        return (string) $provider === DeliveryProvider::Ameex->value;
     }
 }

@@ -21,6 +21,12 @@ class EditDeliveryCompany extends EditRecord
 
     protected static string $resource = DeliveryCompanyResource::class;
 
+    public function mount(int|string $record): void
+    {
+        parent::mount($record);
+        $this->cacheApiSettingsFromRecord();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -28,55 +34,55 @@ class EditDeliveryCompany extends EditRecord
                 ->label(__('codflow.delivery.ameex_test_connection'))
                 ->icon(Heroicon::OutlinedSignal)
                 ->color('info')
-                ->visible(fn (DeliveryCompany $record) => $record->provider === DeliveryProvider::Ameex)
-                ->action(function (DeliveryCompany $record): void {
-                    AmeexNotifications::notify(app(AmeexDeliveryService::class)->testConnection($record));
+                ->visible(fn (): bool => $this->isAmeexProvider($this->getRecord()?->provider))
+                ->action(function (): void {
+                    AmeexNotifications::notify(app(AmeexDeliveryService::class)->testConnection($this->getRecord()));
                 }),
             ActionGroup::make([
                 Action::make('syncAmeexBusinesses')
                     ->label(__('codflow.delivery.ameex_sync_businesses'))
                     ->icon(Heroicon::OutlinedBuildingOffice2)
-                    ->action(function (DeliveryCompany $record): void {
-                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncBusinesses($record));
-                        $this->record->refresh();
+                    ->action(function (): void {
+                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncBusinesses($this->getRecord()));
+                        $this->refreshCachedApiSettings();
                         $this->fillForm();
                     }),
                 Action::make('syncAmeexCities')
                     ->label(__('codflow.delivery.ameex_sync_cities'))
                     ->icon(Heroicon::OutlinedMapPin)
-                    ->action(function (DeliveryCompany $record): void {
-                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncCities($record));
-                        $this->record->refresh();
+                    ->action(function (): void {
+                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncCities($this->getRecord()));
+                        $this->refreshCachedApiSettings();
+                        $this->fillForm();
                     }),
                 Action::make('syncAmeexStatuses')
                     ->label(__('codflow.delivery.ameex_sync_statuses'))
                     ->icon(Heroicon::OutlinedListBullet)
-                    ->action(function (DeliveryCompany $record): void {
-                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->getParcelStatuses($record));
-                        $this->record->refresh();
+                    ->action(function (): void {
+                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->getParcelStatuses($this->getRecord()));
+                        $this->refreshCachedApiSettings();
                     }),
                 Action::make('syncAmeexParcels')
                     ->label(__('codflow.delivery.ameex_sync_parcels'))
                     ->icon(Heroicon::OutlinedArrowPath)
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->action(function (DeliveryCompany $record): void {
-                        AmeexNotifications::notify(app(AmeexImportService::class)->syncCompanyShipments($record));
+                    ->action(function (): void {
+                        AmeexNotifications::notify(app(AmeexImportService::class)->syncCompanyShipments($this->getRecord()));
                     }),
             ])
                 ->label(__('codflow.delivery.ameex_sync_group'))
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->button()
-                ->color('gray')
-                ->visible(fn (DeliveryCompany $record) => $record->provider === DeliveryProvider::Ameex),
+                ->visible(fn (): bool => $this->isAmeexProvider($this->getRecord()?->provider)),
             Action::make('testAmeexProducts')
                 ->label(__('codflow.delivery.ameex_test_products'))
                 ->icon(Heroicon::OutlinedCube)
                 ->color('gray')
-                ->visible(fn (DeliveryCompany $record) => $record->provider === DeliveryProvider::Ameex)
-                ->action(function (DeliveryCompany $record): void {
-                    AmeexNotifications::notify(app(AmeexDeliveryService::class)->testProductsEndpoint($record));
-                    $this->record->refresh();
+                ->visible(fn (): bool => $this->isAmeexProvider($this->getRecord()?->provider))
+                ->action(function (): void {
+                    AmeexNotifications::notify(app(AmeexDeliveryService::class)->testProductsEndpoint($this->getRecord()));
+                    $this->refreshCachedApiSettings();
                 }),
             DeleteAction::make(),
         ];

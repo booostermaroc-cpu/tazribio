@@ -306,7 +306,7 @@ return [
         'ameex_config_section' => 'إعدادات Ameex',
         'ameex_advanced_section' => 'إعدادات API متقدمة',
         'ameex_sync_summary' => 'البيانات المتزامنة',
-        'ameex_sync_summary_text' => ':hubs hub(s) Ameex متاح(ة). استخدم « مزامنة Ameex » لتحديث المدن والمرسلين.',
+        'ameex_sync_summary_text' => ':hubs hub(s) و :cities مدينة متزامنة مع Ameex. استخدم « مزامنة Ameex » للتحديث.',
         'ameex_businesses_sync_success' => 'تمت مزامنة :count مرسل(ين) Ameex.',
         'ameex_businesses_sync_failed' => 'تعذر جلب مرسلي Ameex. أدخل business_id يدوياً. Endpoints: :paths',
         'ameex_order_endpoint_missing' => 'مسار طلبات Ameex مفقود. أدخل create_order_path.',

@@ -79,7 +79,7 @@ class AmeexAutoSyncService
             return true;
         }
 
-        if (blank($settings['ameex_status_list'] ?? null)) {
+        if (blank($settings['ameex_status_list_synced_at'] ?? null)) {
             return true;
         }
 

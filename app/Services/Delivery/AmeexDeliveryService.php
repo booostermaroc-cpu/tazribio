@@ -1676,7 +1676,34 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return (string) $idFromName;
         }
 
-        return null;
+        $sync = $this->syncCities($company);
+        $freshMap = AmeexResponseParser::ensureCityIdToNameMap(
+            is_array($sync['cities'] ?? null) ? $sync['cities'] : [],
+        );
+
+        if ($freshMap === []) {
+            return null;
+        }
+
+        if (array_key_exists($trimmed, $freshMap)) {
+            return $trimmed;
+        }
+
+        if (AmeexResponseParser::looksLikeAmeexCityId($trimmed)) {
+            return $trimmed;
+        }
+
+        $needle = $this->normalizeCityName($trimmed);
+
+        foreach ($freshMap as $id => $name) {
+            if ($this->normalizeCityName((string) $name) === $needle) {
+                return (string) $id;
+            }
+        }
+
+        $idFromFreshName = array_search($trimmed, $freshMap, true);
+
+        return $idFromFreshName !== false ? (string) $idFromFreshName : null;
     }
 
     /** @return array<string, string> */
@@ -1684,6 +1711,16 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     {
         $settings = $company->api_settings ?? [];
         $map = is_array($settings['ameex_cities_map'] ?? null) ? $settings['ameex_cities_map'] : [];
+
+        if ($map === [] && is_array($settings['ameex_cities'] ?? null)) {
+            $map = AmeexResponseParser::normalizeCitiesMap($settings['ameex_cities']);
+        }
+
+        $normalized = AmeexResponseParser::normalizeCitiesMap($map);
+
+        if ($normalized !== []) {
+            return $normalized;
+        }
 
         return AmeexResponseParser::ensureCityIdToNameMap($map);
     }

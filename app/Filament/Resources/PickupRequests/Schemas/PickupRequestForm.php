@@ -59,7 +59,15 @@ class PickupRequestForm
                         ->searchable()
                         ->preload()
                         ->required()
-                        ->helperText(__('codflow.delivery.ameex_city_pickup_help')),
+                        ->helperText(__('codflow.delivery.ameex_city_pickup_help'))
+                        ->afterStateHydrated(function (Select $component, mixed $state, Get $get): void {
+                            $resolved = self::resolveCityState($get('delivery_company_id'), $state);
+
+                            if (filled($resolved) && (string) $resolved !== (string) $state) {
+                                $component->state($resolved);
+                            }
+                        })
+                        ->dehydrateStateUsing(fn (mixed $state, Get $get): ?string => self::resolveCityState($get('delivery_company_id'), $state)),
                     Placeholder::make('ameex_cities_missing')
                         ->label('')
                         ->content(__('codflow.delivery.ameex_cities_sync_required'))
@@ -83,17 +91,31 @@ class PickupRequestForm
                 ->columns(2)
                 ->visible(fn (Get $get): bool => self::isAmeexCompany($get('delivery_company_id')))
                 ->columnSpanFull(),
-            Section::make(Labels::field('notes'))
-                ->schema([
-                    Textarea::make('notes')->label(Labels::field('notes')),
-                ])
-                ->visible(fn (Get $get): bool => ! self::isAmeexCompany($get('delivery_company_id')))
-                ->columnSpanFull(),
         ]);
     }
 
     /** @return array<string, string> */
     public static function cityOptions(mixed $companyId): array
+    {
+        $map = self::citiesMap($companyId);
+
+        if ($map === []) {
+            return [];
+        }
+
+        $options = [];
+
+        foreach ($map as $id => $name) {
+            $options[(string) $id] = (string) $name;
+        }
+
+        asort($options);
+
+        return $options;
+    }
+
+    /** @return array<string, string> */
+    public static function citiesMap(mixed $companyId): array
     {
         if (blank($companyId)) {
             return [];
@@ -105,16 +127,46 @@ class PickupRequestForm
             return [];
         }
 
-        $map = app(AmeexDeliveryService::class)->normalizedCitiesMap($company);
+        return app(AmeexDeliveryService::class)->normalizedCitiesMap($company);
+    }
 
-        if ($map === []) {
-            return [];
+    public static function resolveCityState(mixed $companyId, mixed $state): ?string
+    {
+        if (blank($state)) {
+            return null;
         }
 
-        return collect($map)
-            ->mapWithKeys(fn (string $name, string|int $id): array => [(string) $id => $name])
-            ->sort()
-            ->all();
+        if (blank($companyId)) {
+            return trim((string) $state);
+        }
+
+        $company = DeliveryCompany::query()->find($companyId);
+
+        if ($company === null) {
+            return trim((string) $state);
+        }
+
+        $resolved = app(AmeexDeliveryService::class)->resolveCityId($company, trim((string) $state));
+
+        return $resolved ?? trim((string) $state);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function normalizeAmeexPickupData(array $data): array
+    {
+        if (! self::isAmeexCompany($data['delivery_company_id'] ?? null)) {
+            return $data;
+        }
+
+        $data['ameex_city_id'] = self::resolveCityState(
+            $data['delivery_company_id'] ?? null,
+            $data['ameex_city_id'] ?? null,
+        );
+
+        return $data;
     }
 
     protected static function isAmeexCompany(mixed $companyId): bool

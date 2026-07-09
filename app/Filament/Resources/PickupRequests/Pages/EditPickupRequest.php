@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PickupRequests\Pages;
 
 use App\Filament\Resources\PickupRequests\PickupRequestResource;
+use App\Filament\Resources\PickupRequests\Schemas\PickupRequestForm;
 use App\Filament\Support\AmeexNotifications;
 use App\Services\PickupIntegrationService;
 use Filament\Actions\Action;
@@ -14,6 +15,18 @@ class EditPickupRequest extends EditRecord
 {
     protected static string $resource = PickupRequestResource::class;
 
+    /** @param  array<string, mixed>  $data */
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return PickupRequestForm::normalizeAmeexPickupData($data);
+    }
+
+    /** @param  array<string, mixed>  $data */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return PickupRequestForm::normalizeAmeexPickupData($data);
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -24,7 +37,7 @@ class EditPickupRequest extends EditRecord
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->deliveryCompany?->provider?->value === 'ameex')
                 ->action(function (): void {
-                    $state = $this->form->getState();
+                    $state = PickupRequestForm::normalizeAmeexPickupData($this->form->getRawState());
 
                     $this->record->update([
                         'pickup_address' => $state['pickup_address'] ?? $this->record->pickup_address,

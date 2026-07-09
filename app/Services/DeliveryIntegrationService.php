@@ -389,7 +389,7 @@ class DeliveryIntegrationService
             return ['success' => false, 'message' => __('codflow.delivery.ameex_provider_required')];
         }
 
-        return app(AmeexDeliveryService::class)->createAmeexOrder(
+        return app(AmeexDeliveryService::class)->createManualAmeexOrderFromParcel(
             $company,
             $shipment->fresh(['order.client', 'order.items.product']),
         );

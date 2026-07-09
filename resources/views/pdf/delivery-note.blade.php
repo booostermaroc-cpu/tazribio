@@ -85,7 +85,7 @@
             <td class="value">{{ number_format((float) $order->total_amount, 2, ',', ' ') }} MAD</td>
         </tr>
         <tr>
-            <td class="label">Commission commande</td>
+            <td class="label">Frais de livraison</td>
             <td class="value">-{{ number_format((float) $order->delivery_fee, 2, ',', ' ') }} MAD</td>
         </tr>
         @if((float) $order->discount > 0)

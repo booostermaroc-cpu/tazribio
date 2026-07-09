@@ -209,7 +209,7 @@ class OrderForm
                             ->numeric()
                             ->prefix('MAD')
                             ->default(15)
-                            ->helperText('Commission déduite du montant colis. Ameex reçoit le prix produit (sous-total − remise).')
+                            ->helperText(__('codflow.order.delivery_fee_hint'))
                             ->minValue(0)
                             ->required()
                             ->live()

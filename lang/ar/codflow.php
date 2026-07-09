@@ -92,6 +92,11 @@ return [
         'delivery_note' => 'إذن التسليم',
         'print' => 'طباعة',
         'no_notes' => 'لا توجد ملاحظات',
+        'delivery_fee_hint' => 'رسوم التوصيل مخصومة من مبلغ الطرد. المبلغ النهائي = المجموع الفرعي − رسوم التوصيل − الخصم.',
+        'carrier_cod_amount' => 'مبلغ COD للناقل',
+        'carrier_cod_amount_hint' => 'سعر المنتج المرسل إلى Ameex (بدون خصم رسوم التوصيل).',
+        'carrier_cod' => 'مبلغ COD للناقل',
+        'carrier_cod_hint' => 'سعر المنتج المرسل إلى Ameex (بدون خصم رسوم التوصيل).',
     ],
 
     'enums' => [
@@ -223,6 +228,7 @@ return [
         'company_name' => 'اسم الشركة',
         'rib' => 'RIB',
         'default_delivery_fee' => 'رسوم التوصيل الافتراضية',
+        'delivery_fee' => 'رسوم التوصيل',
         'order_prefix' => 'بادئة الطلب',
         'invoice_prefix' => 'بادئة الفاتورة',
         'client' => 'العميل',

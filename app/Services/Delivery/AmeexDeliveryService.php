@@ -3,6 +3,7 @@
 namespace App\Services\Delivery;
 
 use App\Contracts\DeliveryCompanyServiceInterface;
+use App\Filament\Support\AmeexLabels;
 use App\Models\DeliveryCompany;
 use App\Models\Order;
 use App\Models\PickupRequest;
@@ -174,14 +175,14 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return [
                 'success' => true,
                 'businesses' => $mergedMap,
-                'message' => __('codflow.delivery.ameex_businesses_sync_success', ['count' => count($mergedMap)]),
+                'message' => AmeexLabels::delivery('ameex_businesses_sync_success', ['count' => count($mergedMap)]),
                 'raw' => $lastRaw,
             ];
         }
 
         return [
             'success' => false,
-            'message' => __('codflow.delivery.ameex_businesses_sync_failed', ['paths' => implode(', ', $tested)]),
+            'message' => AmeexLabels::delivery('ameex_businesses_sync_failed', ['paths' => implode(', ', $tested)]),
             'raw' => $lastRaw,
         ];
     }

@@ -392,6 +392,7 @@ class AmeexResponseParser
 
         $candidates = [
             $raw['api']['businesses'] ?? null,
+            $raw['api']['business'] ?? null,
             $raw['api']['data'] ?? null,
             $raw['api']['hubs'] ?? null,
             $raw['api']['list'] ?? null,
@@ -399,7 +400,6 @@ class AmeexResponseParser
             $raw['hubs'] ?? null,
             $raw['data'] ?? null,
             $raw['list'] ?? null,
-            $raw,
         ];
 
         $map = [];
@@ -412,7 +412,41 @@ class AmeexResponseParser
             $map = array_merge($map, self::extractBusinessesFromList($businesses));
         }
 
-        return $map;
+        return self::sanitizeBusinessesMap($map);
+    }
+
+    /** @param  array<string, string>  $map */
+    public static function sanitizeBusinessesMap(array $map): array
+    {
+        $metaIds = ['success', 'error', 'api', 'login', 'type', 'message', 'msg', 'data', 'list', 'hubs', 'businesses', 'body'];
+        $metaNames = ['success', 'error', 'true', 'false', 'ok'];
+
+        $clean = [];
+
+        foreach ($map as $id => $name) {
+            $id = trim((string) $id);
+            $name = trim(strip_tags((string) $name));
+
+            if ($id === '' || $name === '' || mb_strlen($name) < 3) {
+                continue;
+            }
+
+            if (in_array(mb_strtolower($id), $metaIds, true)) {
+                continue;
+            }
+
+            if (in_array(mb_strtolower($name), $metaNames, true)) {
+                continue;
+            }
+
+            if (! ctype_digit($id)) {
+                continue;
+            }
+
+            $clean[$id] = $name;
+        }
+
+        return $clean;
     }
 
     /** @return array<string, string> */
@@ -421,7 +455,11 @@ class AmeexResponseParser
         $map = [];
 
         foreach ($businesses as $id => $business) {
-            if (is_string($business) && filled($business) && ! in_array((string) $id, ['success', 'message', 'Message', 'error', 'api', 'login', 'type', 'Type'], true)) {
+            if (is_string($business) && filled($business) && ! in_array((string) $id, ['success', 'message', 'Message', 'error', 'api', 'login', 'type', 'Type', 'msg', 'body', 'data'], true)) {
+                if (! ctype_digit((string) $id)) {
+                    continue;
+                }
+
                 $map[(string) $id] = $business;
 
                 continue;

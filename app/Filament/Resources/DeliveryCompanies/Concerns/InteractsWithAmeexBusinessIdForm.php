@@ -61,12 +61,13 @@ trait InteractsWithAmeexBusinessIdForm
         $data['ameex_business_id'] = (string) ($settings['business_id'] ?? '');
         $data['ameex_send_without_stock'] = in_array(strtoupper((string) ($settings['send_without_stock_check'] ?? '0')), ['1', 'TRUE', 'YES', 'OUI'], true);
         $businessesMap = is_array($settings['ameex_businesses_map'] ?? null)
-            ? $settings['ameex_businesses_map']
+            ? \App\Services\Delivery\AmeexResponseParser::sanitizeBusinessesMap($settings['ameex_businesses_map'])
             : [];
         $data['ameex_businesses_options_json'] = json_encode(
             \App\Filament\Support\AmeexLabels::sortBusinessOptions($businessesMap),
             JSON_UNESCAPED_UNICODE,
         ) ?: '{}';
+        $data['ameex_business_id_manual'] = '';
         $data['ameex_cities_count'] = is_array($settings['ameex_cities_map'] ?? null)
             ? count($settings['ameex_cities_map'])
             : 0;
@@ -83,13 +84,15 @@ trait InteractsWithAmeexBusinessIdForm
     {
         $settings = $this->apiSettingsSource();
 
-        if (filled($data['ameex_business_id'] ?? null)) {
+        if (filled($data['ameex_business_id_manual'] ?? null)) {
+            $settings['business_id'] = trim((string) $data['ameex_business_id_manual']);
+        } elseif (filled($data['ameex_business_id'] ?? null)) {
             $settings['business_id'] = trim((string) $data['ameex_business_id']);
         }
 
         $settings['send_without_stock_check'] = ($data['ameex_send_without_stock'] ?? false) ? '1' : '0';
 
-        unset($data['ameex_business_id'], $data['ameex_send_without_stock'], $data['ameex_businesses_options_json'], $data['ameex_cities_count']);
+        unset($data['ameex_business_id'], $data['ameex_business_id_manual'], $data['ameex_send_without_stock'], $data['ameex_businesses_options_json'], $data['ameex_cities_count']);
 
         $data['api_settings'] = $settings;
         $this->fullApiSettings = $settings;

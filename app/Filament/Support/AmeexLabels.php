@@ -21,6 +21,10 @@ class AmeexLabels
         'ameex_sync_businesses' => 'Synchroniser les expéditeurs',
         'ameex_sync_group' => 'Synchronisation Ameex',
         'ameex_test_connection' => 'Tester la connexion Ameex',
+        'ameex_businesses_sync_success' => ':count expéditeur(s) Ameex synchronisé(s).',
+        'ameex_businesses_sync_failed' => 'Impossible de récupérer les expéditeurs Ameex. Saisissez l\'ID hub manuellement (Ameex → Mes entreprises). Endpoints testés : :paths',
+        'ameex_business_id_manual' => 'ID hub manuel (si sync échoue)',
+        'ameex_business_id_manual_help' => 'Copiez l\'ID du hub AGADIR depuis Ameex → Mes entreprises / Warehouse. Prioritaire sur la liste si renseigné.',
     ];
 
     /** @param  array<string, string|int>  $replace */

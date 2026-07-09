@@ -10,20 +10,22 @@ use Illuminate\Console\Command;
 class CodflowAmeexSendTest extends Command
 {
     protected $signature = 'codflow:ameex:send-test
-                            {order : ID du colis à envoyer à Ameex}
-                            {--order-only : Créer uniquement la commande manuelle Ameex (colis déjà envoyé)}
+                            {order : ID ou numéro du colis (ex: 15 ou ORD-20260709-M4UR)}
+                            {--order-only : Créer uniquement la commande warehouse Ameex (colis déjà envoyé)}
                             {--force : Forcer la recréation même si déjà synchronisée}';
 
-    protected $description = 'Teste l\'envoi Ameex d\'un colis ou la création de commande manuelle';
+    protected $description = 'Teste l\'envoi Ameex d\'un colis ou la création de commande warehouse';
 
     public function handle(DeliveryIntegrationService $integration, AmeexDeliveryService $ameex): int
     {
-        $order = Order::query()
-            ->with(['client', 'items.product', 'shipments.deliveryCompany', 'shipment.deliveryCompany'])
-            ->find($this->argument('order'));
+        $reference = trim((string) $this->argument('order'));
+        $order = $this->resolveOrder($reference);
 
         if ($order === null) {
-            $this->error('Colis introuvable.');
+            $this->error("Colis introuvable pour « {$reference} ».");
+            $this->line('Utilisez l\'ID numérique du colis ou son numéro complet (ex: ORD-20260709-M4UR).');
+            $this->line('Ce n\'est pas l\'ID du transporteur (Transporteurs → AMEEX /2 = transporteur #2, pas colis #2).');
+            $this->suggestRecentOrders();
 
             return self::FAILURE;
         }
@@ -42,7 +44,17 @@ class CodflowAmeexSendTest extends Command
         $this->line('Produits: '.$order->items->count());
 
         if ($company !== null) {
-            $this->line('Hub Ameex: '.($ameex->businessDisplayName($company) ?? '—').' ('.($ameex->businessId($company) ?? 'manquant').')');
+            $hubName = $ameex->businessDisplayName($company) ?? '—';
+            $hubId = $ameex->businessId($company) ?? 'manquant';
+            $this->line("Hub Ameex: {$hubName} ({$hubId})");
+
+            if ($ameex->isBusinessIdLikelyApiId($company)) {
+                $this->warn('Hub mal configuré : business_id = C-Api-Id. Les commandes warehouse ne seront pas créées. Choisissez AGADIR HUB PRINCIPAL.');
+            }
+
+            if ($ameex->sendsWithoutStockCheck($company)) {
+                $this->warn('Option « Envoyer sans stock » activée : colis Livraison uniquement. Désactivez-la pour Warehouse → Commandes.');
+            }
         }
 
         if ($shipment !== null) {
@@ -71,7 +83,7 @@ class CodflowAmeexSendTest extends Command
 
             if ($this->option('force') && is_array($shipment->ameex_raw_response)) {
                 $raw = $shipment->ameex_raw_response;
-                unset($raw['ameex_order_synced'], $raw['ameex_order_manual'], $raw['ameex_order_path']);
+                unset($raw['ameex_order_synced'], $raw['ameex_order_manual'], $raw['ameex_order_warehouse'], $raw['ameex_order_path']);
                 $shipment->update(['ameex_raw_response' => $raw]);
                 $shipment->refresh();
                 $this->warn('Flag ameex_order_synced réinitialisé.');
@@ -93,5 +105,38 @@ class CodflowAmeexSendTest extends Command
         }
 
         return ($result['success'] ?? false) ? self::SUCCESS : self::FAILURE;
+    }
+
+    protected function resolveOrder(string $reference): ?Order
+    {
+        $query = Order::query()
+            ->with(['client', 'items.product', 'shipments.deliveryCompany', 'shipment.deliveryCompany']);
+
+        if (ctype_digit($reference)) {
+            return $query->find((int) $reference);
+        }
+
+        return $query->where('order_number', $reference)->first();
+    }
+
+    protected function suggestRecentOrders(): void
+    {
+        $orders = Order::query()
+            ->with(['shipments' => fn ($query) => $query->select('id', 'order_id', 'tracking_number')])
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get(['id', 'order_number']);
+
+        if ($orders->isEmpty()) {
+            return;
+        }
+
+        $this->newLine();
+        $this->warn('Colis récents :');
+
+        foreach ($orders as $order) {
+            $tracking = $order->shipments->first()?->tracking_number ?? '—';
+            $this->line("  #{$order->id} — {$order->order_number} (tracking: {$tracking})");
+        }
     }
 }

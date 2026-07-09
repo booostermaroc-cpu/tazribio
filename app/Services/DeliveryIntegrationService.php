@@ -141,7 +141,21 @@ class DeliveryIntegrationService
             $message = $result['message'];
 
             if ($company->provider === DeliveryProvider::Ameex) {
-                $message = $this->syncAmeexOrderAfterParcel($company, $shipment->fresh(['order.client', 'order.items.product']), $message);
+                $parcelStockMode = ($result['raw']['ameex_parcel_stock_mode'] ?? false) === true;
+
+                if ($parcelStockMode) {
+                    $shipment = $shipment->fresh(['order.client', 'order.items.product']);
+                    $previousRaw = is_array($shipment->ameex_raw_response) ? $shipment->ameex_raw_response : [];
+                    $shipment->update([
+                        'ameex_raw_response' => array_merge($previousRaw, [
+                            'ameex_order_synced' => true,
+                            'ameex_order_warehouse' => true,
+                        ]),
+                    ]);
+                    $message = __('codflow.delivery.ameex_send_and_warehouse_success');
+                } else {
+                    $message = $this->syncAmeexOrderAfterParcel($company, $shipment->fresh(['order.client', 'order.items.product']), $message);
+                }
             }
 
             return ['success' => true, 'message' => $message];
@@ -406,6 +420,10 @@ class DeliveryIntegrationService
         $orderResult = $this->sendShipmentOrderToAmeex($shipment);
 
         if ($orderResult['success'] ?? false) {
+            if ($orderResult['warehouse_synced'] ?? false) {
+                return __('codflow.delivery.ameex_send_and_warehouse_success');
+            }
+
             return __('codflow.delivery.ameex_send_and_order_success');
         }
 

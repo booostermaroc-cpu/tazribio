@@ -93,6 +93,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         return array_values(array_unique(array_filter([
             $configured !== '' ? $configured : null,
+            '/customer/Warehouse/Businesses',
+            '/customer/Warehouse/Hubs',
+            '/customer/Warehouse/Stocks/Hubs',
+            '/customer/Delivery/Parcels/Businesses',
             '/customer/Delivery/Businesses',
             '/customer/Delivery/MyBusinesses',
             '/customer/Delivery/Hubs',
@@ -109,8 +113,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => __('codflow.delivery.ameex_incomplete_config')];
         }
 
+        $mergedMap = [];
         $lastRaw = null;
         $tested = [];
+        $successfulPaths = [];
 
         foreach ($this->suggestedBusinessesPaths($company) as $path) {
             $tested[] = $path;
@@ -133,24 +139,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                     continue;
                 }
 
-                $settings = $company->api_settings ?? [];
-                $settings['businesses_list_path'] = $path;
-                $settings['ameex_businesses_map'] = $businessesMap;
-                $settings['ameex_businesses_synced_at'] = now()->toIso8601String();
-                unset($settings['ameex_businesses']);
-
-                if (blank($settings['business_id'] ?? null) && count($businessesMap) === 1) {
-                    $settings['business_id'] = (string) array_key_first($businessesMap);
-                }
-
-                $company->update(['api_settings' => $settings]);
-
-                return [
-                    'success' => true,
-                    'businesses' => $businessesMap,
-                    'message' => __('codflow.delivery.ameex_businesses_sync_success', ['count' => count($businessesMap)]),
-                    'raw' => $raw,
-                ];
+                $mergedMap = array_merge($mergedMap, $businessesMap);
+                $successfulPaths[] = $path;
             } catch (\Throwable $exception) {
                 Log::warning('Ameex businesses sync failed', [
                     'company_id' => $company->id,
@@ -160,11 +150,77 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             }
         }
 
+        if ($mergedMap !== []) {
+            $mergedMap = $this->prioritizeHubBusinesses($mergedMap);
+
+            $settings = $company->api_settings ?? [];
+            $settings['businesses_list_path'] = $successfulPaths[0] ?? $this->suggestedBusinessesPaths($company)[0];
+            $settings['ameex_businesses_map'] = $mergedMap;
+            $settings['ameex_businesses_synced_at'] = now()->toIso8601String();
+            unset($settings['ameex_businesses']);
+
+            if (blank($settings['business_id'] ?? null) || $this->isBusinessIdLikelyApiId($company)) {
+                $preferredHubId = $this->preferredHubBusinessId($mergedMap);
+
+                if (filled($preferredHubId)) {
+                    $settings['business_id'] = $preferredHubId;
+                } elseif (count($mergedMap) === 1) {
+                    $settings['business_id'] = (string) array_key_first($mergedMap);
+                }
+            }
+
+            $company->update(['api_settings' => $settings]);
+
+            return [
+                'success' => true,
+                'businesses' => $mergedMap,
+                'message' => __('codflow.delivery.ameex_businesses_sync_success', ['count' => count($mergedMap)]),
+                'raw' => $lastRaw,
+            ];
+        }
+
         return [
             'success' => false,
             'message' => __('codflow.delivery.ameex_businesses_sync_failed', ['paths' => implode(', ', $tested)]),
             'raw' => $lastRaw,
         ];
+    }
+
+    /** @param  array<string, string>  $map */
+    public function prioritizeHubBusinesses(array $map): array
+    {
+        $hubs = [];
+        $others = [];
+
+        foreach ($map as $id => $name) {
+            if (str_contains(mb_strtoupper((string) $name), 'HUB')) {
+                $hubs[(string) $id] = (string) $name;
+            } else {
+                $others[(string) $id] = (string) $name;
+            }
+        }
+
+        return $hubs + $others;
+    }
+
+    /** @param  array<string, string>  $map */
+    public function preferredHubBusinessId(array $map): ?string
+    {
+        foreach ($map as $id => $name) {
+            $upper = mb_strtoupper((string) $name);
+
+            if (str_contains($upper, 'AGADIR') && str_contains($upper, 'HUB')) {
+                return (string) $id;
+            }
+        }
+
+        foreach ($map as $id => $name) {
+            if (str_contains(mb_strtoupper((string) $name), 'HUB')) {
+                return (string) $id;
+            }
+        }
+
+        return null;
     }
 
     public function apiKey(DeliveryCompany $company): ?string
@@ -232,11 +288,21 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         return array_values(array_unique(array_filter([
             $configured !== '' ? $configured : null,
+            '/customer/Warehouse/Orders/Action/Type/Add',
+            '/customer/Warehouse/Commandes/Action/Type/Add',
             self::DEFAULT_CREATE_ORDER_PATH,
             '/customer/Delivery/Parcels/Action/Type/AddOrder',
             '/customer/Delivery/Parcels/Action/Type/Order',
             '/customer/Delivery/Commandes/Action/Type/Add',
         ])));
+    }
+
+    public function isBusinessIdLikelyApiId(DeliveryCompany $company): bool
+    {
+        $businessId = $this->businessId($company);
+        $apiId = $this->apiId($company);
+
+        return filled($businessId) && filled($apiId) && (string) $businessId === (string) $apiId;
     }
 
     public function isAmeexOrderSynced(Shipment $shipment): bool
@@ -810,9 +876,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     }
 
     /**
-     * Crée une commande manuelle Ameex liée au colis déjà envoyé (tracking existant).
+     * Crée une commande warehouse Ameex (mode STOCK) liée au colis déjà envoyé.
+     * Fallback manuel sans STOCK si les endpoints warehouse échouent (visible Livraison uniquement).
      *
-     * @return array{success: bool, message: string, raw?: array<string, mixed>|null}
+     * @return array{success: bool, message: string, raw?: array<string, mixed>|null, warehouse_synced?: bool}
      */
     public function createManualAmeexOrderFromParcel(DeliveryCompany $company, Shipment $shipment): array
     {
@@ -831,13 +898,23 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         }
 
         if ($this->isAmeexOrderSynced($shipment)) {
-            return ['success' => true, 'message' => __('codflow.delivery.ameex_order_already_synced')];
+            $raw = is_array($shipment->ameex_raw_response) ? $shipment->ameex_raw_response : [];
+
+            return [
+                'success' => true,
+                'message' => __('codflow.delivery.ameex_order_already_synced'),
+                'warehouse_synced' => ($raw['ameex_order_warehouse'] ?? false) === true,
+            ];
         }
 
         $businessId = $this->businessId($company);
 
         if (blank($businessId)) {
             return ['success' => false, 'message' => __('codflow.delivery.ameex_business_missing')];
+        }
+
+        if ($this->isBusinessIdLikelyApiId($company)) {
+            return ['success' => false, 'message' => __('codflow.delivery.ameex_warehouse_requires_hub')];
         }
 
         if (blank($order->client?->full_name) || blank($order->client?->phone) || blank($order->address)) {
@@ -869,6 +946,78 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         }
 
         $paths = $this->suggestedCreateOrderPaths($company);
+
+        $stockValidation = $this->validateOrderStockItems($order, $company);
+
+        if ($stockValidation !== null) {
+            return ['success' => false, 'message' => $stockValidation];
+        }
+
+        $stockResult = $this->tryCreateAmeexOrderOnPaths(
+            $company,
+            $shipment,
+            $order,
+            (string) $businessId,
+            (string) $cityId,
+            $paths,
+            stockMode: true,
+        );
+
+        if ($stockResult['success'] ?? false) {
+            return array_merge($stockResult, ['warehouse_synced' => true]);
+        }
+
+        if ($stockResult['insufficient_stock'] ?? false) {
+            return [
+                'success' => false,
+                'message' => __('codflow.delivery.ameex_warehouse_stock_required', [
+                    'reason' => $stockResult['message'] ?? __('codflow.delivery.api_error'),
+                ]),
+                'raw' => $stockResult['raw'] ?? null,
+                'warehouse_synced' => false,
+            ];
+        }
+
+        Log::info('Ameex warehouse STOCK order failed, trying manual order without STOCK', [
+            'shipment_id' => $shipment->id,
+            'message' => $stockResult['message'] ?? __('codflow.delivery.api_error'),
+        ]);
+
+        $manualResult = $this->tryCreateAmeexOrderOnPaths(
+            $company,
+            $shipment,
+            $order,
+            (string) $businessId,
+            (string) $cityId,
+            $paths,
+            stockMode: false,
+            withoutStockFallback: true,
+        );
+
+        if ($manualResult['success'] ?? false) {
+            return array_merge($manualResult, [
+                'warehouse_synced' => false,
+                'message' => trim(($manualResult['message'] ?? '').' '.__('codflow.delivery.ameex_delivery_only_no_warehouse')),
+            ]);
+        }
+
+        return $manualResult;
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @return array{success: bool, message: string, raw?: array<string, mixed>|null, insufficient_stock?: bool, endpoint_not_found?: bool}
+     */
+    protected function tryCreateAmeexOrderOnPaths(
+        DeliveryCompany $company,
+        Shipment $shipment,
+        Order $order,
+        string $businessId,
+        string $cityId,
+        array $paths,
+        bool $stockMode = true,
+        bool $withoutStockFallback = false,
+    ): array {
         $lastResult = ['success' => false, 'message' => __('codflow.delivery.ameex_order_endpoint_missing')];
 
         foreach ($paths as $path) {
@@ -876,11 +1025,11 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 $company,
                 $shipment,
                 $order,
-                (string) $businessId,
+                $businessId,
                 $path,
-                (string) $cityId,
-                stockMode: false,
-                withoutStockFallback: true,
+                $cityId,
+                $stockMode,
+                $withoutStockFallback,
             );
 
             if ($result['success'] ?? false) {
@@ -889,12 +1038,17 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
             $lastResult = $result;
 
+            if ($result['insufficient_stock'] ?? false) {
+                return $result;
+            }
+
             if (! ($result['endpoint_not_found'] ?? false)) {
                 break;
             }
 
-            Log::info('Ameex manual order endpoint not found, trying next path', [
+            Log::info('Ameex order endpoint not found, trying next path', [
                 'shipment_id' => $shipment->id,
+                'stock_mode' => $stockMode,
                 'path' => $path,
             ]);
         }
@@ -960,15 +1114,20 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ]);
             }
 
-            $message = $withoutStockFallback || ! $stockMode
-                ? __('codflow.delivery.ameex_manual_order_success', [
+            $message = $stockMode
+                ? __('codflow.delivery.ameex_warehouse_order_success', [
                     'tracking' => (string) $shipment->tracking_number,
                 ])
-                : AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.ameex_order_send_success'));
+                : ($withoutStockFallback
+                    ? __('codflow.delivery.ameex_manual_order_success', [
+                        'tracking' => (string) $shipment->tracking_number,
+                    ])
+                    : AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.ameex_order_send_success')));
 
             $shipment->update([
                 'ameex_raw_response' => array_merge($previousRaw, $raw, [
                     'ameex_order_synced' => true,
+                    'ameex_order_warehouse' => $stockMode,
                     'ameex_order_manual' => ! $stockMode,
                     'ameex_order_path' => $path,
                 ]),

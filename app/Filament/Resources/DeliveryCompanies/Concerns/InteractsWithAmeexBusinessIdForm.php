@@ -63,7 +63,10 @@ trait InteractsWithAmeexBusinessIdForm
         $businessesMap = is_array($settings['ameex_businesses_map'] ?? null)
             ? $settings['ameex_businesses_map']
             : [];
-        $data['ameex_businesses_options_json'] = json_encode($businessesMap, JSON_UNESCAPED_UNICODE) ?: '{}';
+        $data['ameex_businesses_options_json'] = json_encode(
+            \App\Filament\Support\AmeexLabels::sortBusinessOptions($businessesMap),
+            JSON_UNESCAPED_UNICODE,
+        ) ?: '{}';
         $data['ameex_cities_count'] = is_array($settings['ameex_cities_map'] ?? null)
             ? count($settings['ameex_cities_map'])
             : 0;

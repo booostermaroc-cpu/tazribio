@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DeliveryCompanies\Pages;
 use App\Enums\DeliveryProvider;
 use App\Filament\Resources\DeliveryCompanies\Concerns\InteractsWithAmeexBusinessIdForm;
 use App\Filament\Resources\DeliveryCompanies\DeliveryCompanyResource;
+use App\Filament\Support\AmeexLabels;
 use App\Filament\Support\AmeexNotifications;
 use App\Models\DeliveryCompany;
 use App\Services\AmeexImportService;
@@ -31,7 +32,7 @@ class EditDeliveryCompany extends EditRecord
     {
         return [
             Action::make('testAmeexConnection')
-                ->label(__('codflow.delivery.ameex_test_connection'))
+                ->label(AmeexLabels::delivery('ameex_test_connection'))
                 ->icon(Heroicon::OutlinedSignal)
                 ->color('info')
                 ->visible(fn (): bool => $this->isAmeexProvider($this->getRecord()?->provider))
@@ -40,10 +41,11 @@ class EditDeliveryCompany extends EditRecord
                 }),
             ActionGroup::make([
                 Action::make('syncAmeexBusinesses')
-                    ->label(__('codflow.delivery.ameex_sync_businesses'))
+                    ->label(AmeexLabels::delivery('ameex_sync_businesses'))
                     ->icon(Heroicon::OutlinedBuildingOffice2)
                     ->action(function (): void {
-                        AmeexNotifications::notify(app(AmeexDeliveryService::class)->syncBusinesses($this->getRecord()));
+                        $result = app(AmeexDeliveryService::class)->syncBusinesses($this->getRecord());
+                        AmeexNotifications::notify($result);
                         $this->refreshCachedApiSettings();
                         $this->fillForm();
                     }),
@@ -71,7 +73,7 @@ class EditDeliveryCompany extends EditRecord
                         AmeexNotifications::notify(app(AmeexImportService::class)->syncCompanyShipments($this->getRecord()));
                     }),
             ])
-                ->label(__('codflow.delivery.ameex_sync_group'))
+                ->label(AmeexLabels::delivery('ameex_sync_group'))
                 ->icon(Heroicon::OutlinedArrowPath)
                 ->button()
                 ->visible(fn (): bool => $this->isAmeexProvider($this->getRecord()?->provider)),

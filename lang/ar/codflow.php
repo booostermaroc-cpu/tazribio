@@ -301,6 +301,7 @@ return [
         'ameex_business_id' => 'معرف المرسل / Hub Ameex',
         'ameex_business_saved' => 'محفوظ',
         'ameex_business_id_help' => 'اختر hub Ameex (مثل AGADIR HUB PRINCIPAL)، وليس Tazri bio فقط. انقر « مزامنة المرسلين » ثم اختر الـ hub.',
+        'ameex_no_hub_warning' => 'لم يتم العثور على hub (مثل AGADIR HUB PRINCIPAL). انقر « مزامنة Ameex » → « مزامنة المرسلين ».',
         'ameex_sync_businesses' => 'مزامنة المرسلين',
         'ameex_sync_group' => 'مزامنة Ameex',
         'ameex_config_section' => 'إعدادات Ameex',

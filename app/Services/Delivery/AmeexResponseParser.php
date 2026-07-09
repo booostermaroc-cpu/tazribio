@@ -390,22 +390,38 @@ class AmeexResponseParser
             return [];
         }
 
-        $businesses = $raw['api']['businesses']
-            ?? $raw['api']['data']
-            ?? $raw['api']['hubs']
-            ?? $raw['businesses']
-            ?? $raw['hubs']
-            ?? $raw['data']
-            ?? $raw;
-
-        if (! is_array($businesses)) {
-            return [];
-        }
+        $candidates = [
+            $raw['api']['businesses'] ?? null,
+            $raw['api']['data'] ?? null,
+            $raw['api']['hubs'] ?? null,
+            $raw['api']['list'] ?? null,
+            $raw['businesses'] ?? null,
+            $raw['hubs'] ?? null,
+            $raw['data'] ?? null,
+            $raw['list'] ?? null,
+            $raw,
+        ];
 
         $map = [];
 
+        foreach ($candidates as $businesses) {
+            if (! is_array($businesses)) {
+                continue;
+            }
+
+            $map = array_merge($map, self::extractBusinessesFromList($businesses));
+        }
+
+        return $map;
+    }
+
+    /** @return array<string, string> */
+    protected static function extractBusinessesFromList(array $businesses): array
+    {
+        $map = [];
+
         foreach ($businesses as $id => $business) {
-            if (is_string($business) && filled($business)) {
+            if (is_string($business) && filled($business) && ! in_array((string) $id, ['success', 'message', 'Message', 'error', 'api', 'login', 'type', 'Type'], true)) {
                 $map[(string) $id] = $business;
 
                 continue;
@@ -415,10 +431,33 @@ class AmeexResponseParser
                 continue;
             }
 
-            $businessId = (string) ($business['id'] ?? $business['ID'] ?? $business['business_id'] ?? $id);
-            $name = (string) ($business['name'] ?? $business['Name'] ?? $business['label'] ?? $business['title'] ?? '');
+            $businessId = (string) (
+                $business['id']
+                ?? $business['ID']
+                ?? $business['business_id']
+                ?? $business['BusinessId']
+                ?? $business['mdl_business']
+                ?? $business['business']
+                ?? $id
+            );
 
-            if ($businessId !== '' && $name !== '') {
+            $name = (string) (
+                $business['name']
+                ?? $business['Name']
+                ?? $business['label']
+                ?? $business['title']
+                ?? $business['business_name']
+                ?? $business['BusinessName']
+                ?? $business['hub_name']
+                ?? $business['HubName']
+                ?? $business['company']
+                ?? $business['Company']
+                ?? $business['sender']
+                ?? $business['Sender']
+                ?? ''
+            );
+
+            if ($businessId !== '' && $name !== '' && ! in_array($businessId, ['success', 'message', 'api', 'login'], true)) {
                 $map[$businessId] = $name;
             }
         }

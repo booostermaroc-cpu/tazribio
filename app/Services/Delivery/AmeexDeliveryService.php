@@ -133,9 +133,9 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
                 $settings = $company->api_settings ?? [];
                 $settings['businesses_list_path'] = $path;
-                $settings['ameex_businesses'] = $raw;
                 $settings['ameex_businesses_map'] = $businessesMap;
                 $settings['ameex_businesses_synced_at'] = now()->toIso8601String();
+                unset($settings['ameex_businesses']);
 
                 if (blank($settings['business_id'] ?? null) && count($businessesMap) === 1) {
                     $settings['business_id'] = (string) array_key_first($businessesMap);
@@ -513,9 +513,9 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             }
 
             $settings = $company->api_settings ?? [];
-            $settings['ameex_cities'] = $json;
             $settings['ameex_cities_map'] = $citiesMap;
             $settings['ameex_cities_synced_at'] = now()->toIso8601String();
+            unset($settings['ameex_cities']);
             $company->update(['api_settings' => $settings]);
 
             return [

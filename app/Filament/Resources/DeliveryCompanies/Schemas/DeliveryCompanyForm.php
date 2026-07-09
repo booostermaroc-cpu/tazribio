@@ -5,6 +5,7 @@ namespace App\Filament\Resources\DeliveryCompanies\Schemas;
 use App\Enums\DeliveryProvider;
 use App\Filament\Support\Labels;
 use App\Services\Delivery\AmeexDeliveryService;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -57,15 +58,14 @@ class DeliveryCompanyForm
                 ->columnSpanFull(),
             Section::make(__('codflow.delivery.ameex_config_section'))
                 ->schema([
+                    Hidden::make('ameex_businesses_options_json')
+                        ->dehydrated(false),
                     Select::make('ameex_business_id')
                         ->label(__('codflow.delivery.ameex_business_id'))
                         ->helperText(__('codflow.delivery.ameex_business_id_help'))
                         ->options(function (Get $get): array {
-                            $options = $get('ameex_businesses_options');
-
-                            if (! is_array($options)) {
-                                $options = [];
-                            }
+                            $decoded = json_decode((string) ($get('ameex_businesses_options_json') ?? '{}'), true);
+                            $options = is_array($decoded) ? $decoded : [];
 
                             $current = trim((string) ($get('ameex_business_id') ?? ''));
 
@@ -81,6 +81,17 @@ class DeliveryCompanyForm
                         ->label(__('codflow.delivery.ameex_send_without_stock'))
                         ->helperText(__('codflow.delivery.ameex_send_without_stock_help'))
                         ->default(false),
+                    Placeholder::make('ameex_sync_summary')
+                        ->label(__('codflow.delivery.ameex_sync_summary'))
+                        ->content(function (Get $get): string {
+                            $decoded = json_decode((string) ($get('ameex_businesses_options_json') ?? '{}'), true);
+                            $options = is_array($decoded) ? $decoded : [];
+
+                            return __('codflow.delivery.ameex_sync_summary_text', [
+                                'hubs' => count($options),
+                            ]);
+                        })
+                        ->columnSpanFull(),
                     Placeholder::make('ameex_auto_sync_hint')
                         ->label('')
                         ->content(__('codflow.delivery.ameex_auto_sync_scheduled'))

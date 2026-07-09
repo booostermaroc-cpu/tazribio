@@ -7,8 +7,10 @@ class AmeexLabels
     /** @var array<string, string> */
     protected static array $deliveryFallbacks = [
         'ameex_config_section' => 'Configuration Ameex',
-        'ameex_business_id' => 'ID expéditeur / Hub Ameex',
-        'ameex_business_id_help' => 'Choisissez AGADIR HUB PRINCIPAL (pas le C-Api-Id 21820). Cliquez « Synchroniser les expéditeurs » dans Synchronisation Ameex.',
+        'ameex_business_id' => 'ID expéditeur Ameex (livraison)',
+        'ameex_business_id_help' => 'Expéditeur livraison (souvent = C-Api-Id 21820). Différent du hub warehouse.',
+        'ameex_hub_id' => 'ID hub warehouse (AGADIR)',
+        'ameex_hub_id_help' => 'Hub entrepôt pour mode STOCK. Agadir Hub Principal = 17.',
         'ameex_business_saved' => 'sauvegardé',
         'ameex_send_without_stock' => 'Envoyer sans stock Ameex (direct)',
         'ameex_send_without_stock_help' => 'Si activé : colis Livraison uniquement (pas de STOCK). Désactivez pour afficher aussi dans Warehouse → Commandes (hub AGADIR + stock Ameex requis).',
@@ -22,9 +24,8 @@ class AmeexLabels
         'ameex_sync_group' => 'Synchronisation Ameex',
         'ameex_test_connection' => 'Tester la connexion Ameex',
         'ameex_businesses_sync_success' => ':count expéditeur(s) Ameex synchronisé(s).',
-        'ameex_businesses_sync_failed' => 'Impossible de récupérer les expéditeurs Ameex. Saisissez l\'ID hub manuellement (Ameex → Mes entreprises). Endpoints testés : :paths',
-        'ameex_business_id_manual' => 'ID hub manuel (si sync échoue)',
-        'ameex_business_id_manual_help' => 'Copiez l\'ID du hub AGADIR depuis Ameex → Mes entreprises / Warehouse. Prioritaire sur la liste si renseigné.',
+        'ameex_businesses_sync_failed' => 'Impossible de récupérer les expéditeurs Ameex. Saisissez hub=17 manuellement. Endpoints : :paths',
+        'ameex_sender_required' => 'Ameex exige un expéditeur valide. Utilisez business=21820 (expéditeur) et hub=17 (AGADIR) en mode STOCK.',
     ];
 
     /** @param  array<string, string|int>  $replace */

@@ -58,7 +58,17 @@ trait InteractsWithAmeexBusinessIdForm
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $settings = $this->apiSettingsSource();
-        $data['ameex_business_id'] = (string) ($settings['business_id'] ?? '');
+        $apiId = (string) ($data['api_username'] ?? $this->record?->api_username ?? '');
+        $storedBusinessId = (string) ($settings['business_id'] ?? '');
+        $storedHubId = (string) ($settings['hub_id'] ?? '');
+
+        if (blank($storedHubId) && $storedBusinessId !== '' && $storedBusinessId !== $apiId) {
+            $storedHubId = $storedBusinessId;
+            $storedBusinessId = $apiId;
+        }
+
+        $data['ameex_business_id'] = $storedBusinessId !== '' ? $storedBusinessId : $apiId;
+        $data['ameex_hub_id'] = $storedHubId;
         $data['ameex_send_without_stock'] = in_array(strtoupper((string) ($settings['send_without_stock_check'] ?? '0')), ['1', 'TRUE', 'YES', 'OUI'], true);
         $businessesMap = is_array($settings['ameex_businesses_map'] ?? null)
             ? \App\Services\Delivery\AmeexResponseParser::sanitizeBusinessesMap($settings['ameex_businesses_map'])
@@ -67,7 +77,6 @@ trait InteractsWithAmeexBusinessIdForm
             \App\Filament\Support\AmeexLabels::sortBusinessOptions($businessesMap),
             JSON_UNESCAPED_UNICODE,
         ) ?: '{}';
-        $data['ameex_business_id_manual'] = '';
         $data['ameex_cities_count'] = is_array($settings['ameex_cities_map'] ?? null)
             ? count($settings['ameex_cities_map'])
             : 0;
@@ -84,15 +93,19 @@ trait InteractsWithAmeexBusinessIdForm
     {
         $settings = $this->apiSettingsSource();
 
-        if (filled($data['ameex_business_id_manual'] ?? null)) {
-            $settings['business_id'] = trim((string) $data['ameex_business_id_manual']);
-        } elseif (filled($data['ameex_business_id'] ?? null)) {
+        if (filled($data['ameex_hub_id'] ?? null)) {
+            $settings['hub_id'] = trim((string) $data['ameex_hub_id']);
+        }
+
+        if (filled($data['ameex_business_id'] ?? null)) {
             $settings['business_id'] = trim((string) $data['ameex_business_id']);
+        } elseif (filled($data['api_username'] ?? null)) {
+            $settings['business_id'] = trim((string) $data['api_username']);
         }
 
         $settings['send_without_stock_check'] = ($data['ameex_send_without_stock'] ?? false) ? '1' : '0';
 
-        unset($data['ameex_business_id'], $data['ameex_business_id_manual'], $data['ameex_send_without_stock'], $data['ameex_businesses_options_json'], $data['ameex_cities_count']);
+        unset($data['ameex_business_id'], $data['ameex_hub_id'], $data['ameex_send_without_stock'], $data['ameex_businesses_options_json'], $data['ameex_cities_count']);
 
         $data['api_settings'] = $settings;
         $this->fullApiSettings = $settings;

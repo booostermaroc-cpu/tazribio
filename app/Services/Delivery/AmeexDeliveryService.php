@@ -62,11 +62,68 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
     public function businessId(DeliveryCompany $company): ?string
     {
-        $settings = $company->api_settings ?? [];
-        $businessId = $settings['business_id'] ?? $settings['mdl_business'] ?? null;
+        return $this->senderBusinessId($company);
+    }
 
-        if (filled($businessId)) {
-            return $this->sanitizeCredential((string) $businessId);
+    public function senderBusinessId(DeliveryCompany $company): ?string
+    {
+        $settings = $company->api_settings ?? [];
+        $configured = $settings['business_id'] ?? $settings['mdl_business'] ?? null;
+        $hubId = $this->resolvedHubId($company);
+
+        if (filled($configured)) {
+            $configured = $this->sanitizeCredential((string) $configured);
+
+            if (filled($hubId) && (string) $configured === (string) $hubId && filled($this->apiId($company))) {
+                return $this->apiId($company);
+            }
+
+            return $configured;
+        }
+
+        return $this->apiId($company);
+    }
+
+    public function hubId(DeliveryCompany $company): ?string
+    {
+        return $this->resolvedHubId($company);
+    }
+
+    public function hubDisplayName(DeliveryCompany $company): ?string
+    {
+        $hubId = $this->hubId($company);
+
+        if (blank($hubId)) {
+            return null;
+        }
+
+        $map = is_array($company->api_settings['ameex_businesses_map'] ?? null)
+            ? $company->api_settings['ameex_businesses_map']
+            : [];
+
+        return $map[$hubId] ?? null;
+    }
+
+    protected function resolvedHubId(DeliveryCompany $company): ?string
+    {
+        $settings = $company->api_settings ?? [];
+
+        if (filled($settings['hub_id'] ?? null)) {
+            return $this->sanitizeCredential((string) $settings['hub_id']);
+        }
+
+        $businessId = $settings['business_id'] ?? null;
+        $apiId = $this->apiId($company);
+
+        if (filled($businessId) && filled($apiId) && (string) $businessId !== (string) $apiId) {
+            $map = is_array($settings['ameex_businesses_map'] ?? null)
+                ? $settings['ameex_businesses_map']
+                : [];
+            $label = $map[$businessId] ?? '';
+
+            if (str_contains(mb_strtoupper((string) $label), 'HUB') || (string) $businessId === '17') {
+                return $this->sanitizeCredential((string) $businessId);
+            }
         }
 
         return null;
@@ -160,13 +217,19 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $settings['ameex_businesses_synced_at'] = now()->toIso8601String();
             unset($settings['ameex_businesses']);
 
-            if (blank($settings['business_id'] ?? null) || $this->isBusinessIdLikelyApiId($company)) {
+            if (blank($settings['hub_id'] ?? null)) {
                 $preferredHubId = $this->preferredHubBusinessId($mergedMap);
 
                 if (filled($preferredHubId)) {
-                    $settings['business_id'] = $preferredHubId;
-                } elseif (count($mergedMap) === 1) {
-                    $settings['business_id'] = (string) array_key_first($mergedMap);
+                    $settings['hub_id'] = $preferredHubId;
+                }
+            }
+
+            if (blank($settings['business_id'] ?? null)) {
+                $senderId = $this->preferredSenderBusinessId($mergedMap) ?? $this->apiId($company);
+
+                if (filled($senderId)) {
+                    $settings['business_id'] = (string) $senderId;
                 }
             }
 
@@ -296,6 +359,18 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             '/customer/Delivery/Parcels/Action/Type/Order',
             '/customer/Delivery/Commandes/Action/Type/Add',
         ])));
+    }
+
+    /** @param  array<string, string>  $map */
+    public function preferredSenderBusinessId(array $map): ?string
+    {
+        foreach ($map as $id => $name) {
+            if (! str_contains(mb_strtoupper((string) $name), 'HUB')) {
+                return (string) $id;
+            }
+        }
+
+        return null;
     }
 
     public function isBusinessIdLikelyApiId(DeliveryCompany $company): bool
@@ -914,7 +989,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => __('codflow.delivery.ameex_business_missing')];
         }
 
-        if ($this->isBusinessIdLikelyApiId($company)) {
+        if ($this->isBusinessIdLikelyApiId($company) && blank($this->hubId($company))) {
             return ['success' => false, 'message' => __('codflow.delivery.ameex_warehouse_requires_hub')];
         }
 
@@ -1182,7 +1257,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
 
-            return $this->withProductReferences($multipart, $order);
+            return $this->withStockHub($this->withProductReferences($multipart, $order), $company);
         }
 
         return $multipart;
@@ -1284,7 +1359,22 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
 
-            return $this->withProductReferences($multipart, $order);
+            return $this->withStockHub($this->withProductReferences($multipart, $order), $company);
+        }
+
+        return $multipart;
+    }
+
+    /**
+     * @param  list<array{name: string, contents: mixed}>  $multipart
+     * @return list<array{name: string, contents: mixed}>
+     */
+    protected function withStockHub(array $multipart, DeliveryCompany $company): array
+    {
+        $hubId = $this->hubId($company);
+
+        if (filled($hubId)) {
+            $multipart[] = ['name' => 'hub', 'contents' => $hubId];
         }
 
         return $multipart;

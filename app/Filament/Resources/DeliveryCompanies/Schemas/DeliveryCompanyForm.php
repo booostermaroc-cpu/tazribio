@@ -79,10 +79,10 @@ class DeliveryCompanyForm
                         })
                         ->searchable()
                         ->columnSpanFull(),
-                    TextInput::make('ameex_business_id_manual')
-                        ->label(AmeexLabels::delivery('ameex_business_id_manual'))
-                        ->helperText(AmeexLabels::delivery('ameex_business_id_manual_help'))
-                        ->placeholder('ID hub AGADIR depuis Ameex')
+                    TextInput::make('ameex_hub_id')
+                        ->label(AmeexLabels::delivery('ameex_hub_id'))
+                        ->helperText(AmeexLabels::delivery('ameex_hub_id_help'))
+                        ->placeholder('17')
                         ->columnSpanFull(),
                     Placeholder::make('ameex_no_hub_warning')
                         ->content(AmeexLabels::delivery('ameex_no_hub_warning'))

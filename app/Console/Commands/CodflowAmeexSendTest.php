@@ -44,16 +44,14 @@ class CodflowAmeexSendTest extends Command
         $this->line('Produits: '.$order->items->count());
 
         if ($company !== null) {
-            $hubName = $ameex->businessDisplayName($company) ?? '—';
-            $hubId = $ameex->businessId($company) ?? 'manquant';
-            $this->line("Hub Ameex: {$hubName} ({$hubId})");
+            $hubName = $ameex->hubDisplayName($company) ?? '—';
+            $hubId = $ameex->hubId($company) ?? 'manquant';
+            $senderId = $ameex->senderBusinessId($company) ?? 'manquant';
+            $this->line("Expéditeur Ameex: {$senderId}");
+            $this->line("Hub warehouse: {$hubName} ({$hubId})");
 
-            if ($ameex->isBusinessIdLikelyApiId($company)) {
-                $this->warn('Hub mal configuré : business_id = C-Api-Id. Les commandes warehouse ne seront pas créées. Choisissez AGADIR HUB PRINCIPAL.');
-            }
-
-            if ($ameex->sendsWithoutStockCheck($company)) {
-                $this->warn('Option « Envoyer sans stock » activée : colis Livraison uniquement. Désactivez-la pour Warehouse → Commandes.');
+            if (blank($ameex->hubId($company))) {
+                $this->warn('Hub warehouse manquant : renseignez 17 (Agadir Hub Principal) dans Transporteurs → AMEEX.');
             }
         }
 

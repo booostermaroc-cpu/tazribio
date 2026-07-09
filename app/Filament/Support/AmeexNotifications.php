@@ -11,7 +11,7 @@ class AmeexNotifications
     {
         $message = (string) ($result['message'] ?? '');
 
-        if (str_starts_with($message, 'codflow.')) {
+        if (str_starts_with($message, 'codflow.delivery.')) {
             $key = str_replace('codflow.delivery.', '', $message);
             $resolved = AmeexLabels::delivery($key);
 

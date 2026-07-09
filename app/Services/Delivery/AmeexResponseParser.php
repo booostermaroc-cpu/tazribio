@@ -211,6 +211,38 @@ class AmeexResponseParser
             || str_contains($normalized, 'stock insuffisant');
     }
 
+    public static function hasInsufficientStockError(mixed $raw): bool
+    {
+        $message = self::extractRawApiMessage($raw);
+
+        return is_string($message) && self::isInsufficientStockError($message);
+    }
+
+    public static function extractRawApiMessage(mixed $raw): ?string
+    {
+        if (! is_array($raw)) {
+            return null;
+        }
+
+        $api = $raw['api'] ?? null;
+
+        if (is_array($api)) {
+            foreach (['msg', 'message', 'Message'] as $key) {
+                if (filled($api[$key] ?? null) && is_string($api[$key])) {
+                    return $api[$key];
+                }
+            }
+        }
+
+        foreach (['message', 'Message', 'error', 'msg'] as $key) {
+            if (filled($raw[$key] ?? null) && is_string($raw[$key])) {
+                return $raw[$key];
+            }
+        }
+
+        return null;
+    }
+
     public static function extractPickupRequestRef(mixed $raw): ?string
     {
         if (! is_array($raw)) {

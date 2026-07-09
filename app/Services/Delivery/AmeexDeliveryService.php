@@ -676,14 +676,49 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return $validation;
         }
 
+        $path = $this->path($company, 'create_parcel_path', '/customer/Delivery/Parcels/Action/Type/Add');
+        $businessId = (string) $validation['business_id'];
+        $cityId = (string) $validation['city_id'];
+
+        if ($this->sendsWithoutStockCheck($company)) {
+            return $this->postCreateShipmentParcel($company, $order, $shipment, $path, $businessId, $cityId, stockMode: false);
+        }
+
+        $result = $this->postCreateShipmentParcel($company, $order, $shipment, $path, $businessId, $cityId, stockMode: true);
+
+        if (! ($result['success'] ?? false) && ($result['insufficient_stock'] ?? false)) {
+            Log::info('Ameex stock insufficient, retrying parcel without STOCK deduction', [
+                'order_id' => $order->id,
+                'shipment_id' => $shipment->id,
+            ]);
+
+            return $this->postCreateShipmentParcel($company, $order, $shipment, $path, $businessId, $cityId, stockMode: false, withoutStockFallback: true);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array{success: bool, tracking_number?: string, delivery_note_ref?: string, message: string, raw?: array<string, mixed>, insufficient_stock?: bool}
+     */
+    protected function postCreateShipmentParcel(
+        DeliveryCompany $company,
+        Order $order,
+        Shipment $shipment,
+        string $path,
+        string $businessId,
+        string $cityId,
+        bool $stockMode = true,
+        bool $withoutStockFallback = false,
+    ): array {
         try {
-            $path = $this->path($company, 'create_parcel_path', '/customer/Delivery/Parcels/Action/Type/Add');
-            $multipart = $this->buildCreateShipmentPayload($company, $order, (string) $validation['business_id'], (string) $validation['city_id']);
+            $multipart = $this->buildCreateShipmentPayload($company, $order, $businessId, $cityId, $stockMode);
 
             if (config('app.debug')) {
                 Log::debug('Ameex create parcel payload', [
                     'order_id' => $order->id,
                     'shipment_id' => $shipment->id,
+                    'stock_mode' => $stockMode,
                     'payload' => $this->multipartToLoggablePayload($multipart),
                 ]);
             }
@@ -696,6 +731,15 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $raw = is_array($json) ? $json : ['body' => $response->body()];
 
             if (! $response->successful() || AmeexResponseParser::hasApiError($raw)) {
+                if ($stockMode && AmeexResponseParser::hasInsufficientStockError($raw)) {
+                    return [
+                        'success' => false,
+                        'insufficient_stock' => true,
+                        'message' => AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.api_error')),
+                        'raw' => $raw,
+                    ];
+                }
+
                 return $this->fail('Ameex create parcel failed', [
                     'message' => AmeexResponseParser::extractApiMessage($raw, $this->parseErrorMessage(is_array($json) ? $json : null, __('codflow.delivery.api_error'))),
                     'raw' => $raw,
@@ -711,11 +755,15 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ]);
             }
 
+            $message = $withoutStockFallback || ! $stockMode
+                ? __('codflow.delivery.ameex_send_success_without_stock')
+                : AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.ameex_send_success'));
+
             return [
                 'success' => true,
                 'tracking_number' => $tracking,
                 'delivery_note_ref' => $this->extractDeliveryNoteRef($raw),
-                'message' => AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.ameex_send_success')),
+                'message' => $message,
                 'raw' => $raw,
             ];
         } catch (\Throwable $exception) {
@@ -771,13 +819,41 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return ['success' => false, 'message' => $stockValidation];
         }
 
+        $stockMode = ! $this->sendsWithoutStockCheck($company);
+        $result = $this->postCreateAmeexOrder($company, $shipment, $order, (string) $businessId, $path, $stockMode);
+
+        if (! ($result['success'] ?? false) && ($result['insufficient_stock'] ?? false)) {
+            Log::info('Ameex stock insufficient, retrying order without STOCK deduction', [
+                'order_id' => $order->id,
+                'shipment_id' => $shipment->id,
+            ]);
+
+            return $this->postCreateAmeexOrder($company, $shipment, $order, (string) $businessId, $path, stockMode: false, withoutStockFallback: true);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array{success: bool, message: string, raw?: array<string, mixed>|null, insufficient_stock?: bool}
+     */
+    protected function postCreateAmeexOrder(
+        DeliveryCompany $company,
+        Shipment $shipment,
+        Order $order,
+        string $businessId,
+        string $path,
+        bool $stockMode = true,
+        bool $withoutStockFallback = false,
+    ): array {
         try {
-            $multipart = $this->buildCreateAmeexOrderPayload($company, $shipment, $order, (string) $businessId);
+            $multipart = $this->buildCreateAmeexOrderPayload($company, $shipment, $order, $businessId, $stockMode);
 
             if (config('app.debug')) {
                 Log::debug('Ameex create order payload', [
                     'shipment_id' => $shipment->id,
                     'order_id' => $order->id,
+                    'stock_mode' => $stockMode,
                     'payload' => $this->multipartToLoggablePayload($multipart),
                 ]);
             }
@@ -792,15 +868,28 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $shipment->update(['ameex_raw_response' => $raw]);
 
             if (! $response->successful() || AmeexResponseParser::hasApiError($raw)) {
+                if ($stockMode && AmeexResponseParser::hasInsufficientStockError($raw)) {
+                    return [
+                        'success' => false,
+                        'insufficient_stock' => true,
+                        'message' => AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.api_error')),
+                        'raw' => $raw,
+                    ];
+                }
+
                 return $this->fail('Ameex create order failed', [
                     'message' => AmeexResponseParser::extractApiMessage($raw, $this->parseErrorMessage(is_array($json) ? $json : null, __('codflow.delivery.api_error'))),
                     'raw' => $raw,
                 ]);
             }
 
+            $message = $withoutStockFallback || ! $stockMode
+                ? __('codflow.delivery.ameex_order_send_success_without_stock')
+                : AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.ameex_order_send_success'));
+
             return [
                 'success' => true,
-                'message' => AmeexResponseParser::extractApiMessage($raw, __('codflow.delivery.ameex_order_send_success')),
+                'message' => $message,
                 'raw' => $raw,
             ];
         } catch (\Throwable $exception) {
@@ -811,12 +900,11 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     /**
      * @return list<array{name: string, contents: mixed}>
      */
-    public function buildCreateAmeexOrderPayload(DeliveryCompany $company, Shipment $shipment, Order $order, string $businessId): array
+    public function buildCreateAmeexOrderPayload(DeliveryCompany $company, Shipment $shipment, Order $order, string $businessId, bool $stockMode = true): array
     {
         $order->loadMissing(['client', 'items.product']);
 
         $multipart = [
-            ['name' => 'type', 'contents' => 'STOCK'],
             ['name' => 'business', 'contents' => $businessId],
             ['name' => 'order_num', 'contents' => (string) $order->order_number],
             ['name' => 'tracking_number', 'contents' => (string) $shipment->tracking_number],
@@ -825,13 +913,19 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'city', 'contents' => (string) $order->city],
             ['name' => 'address', 'contents' => (string) $order->address],
             ['name' => 'comment', 'contents' => (string) ($order->notes ?? '')],
-            ['name' => 'product', 'contents' => $this->sendsWithoutStockCheck($company)
-                ? $this->productSummaryWithCodQuantities($order)
-                : $this->productSummary($order)],
+            ['name' => 'product', 'contents' => $stockMode
+                ? $this->productSummary($order)
+                : $this->productSummaryWithCodQuantities($order)],
             ['name' => 'cod', 'contents' => (string) $order->final_amount],
         ];
 
-        return $this->withProductReferences($multipart, $order);
+        if ($stockMode) {
+            array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
+
+            return $this->withProductReferences($multipart, $order);
+        }
+
+        return $multipart;
     }
 
     /**
@@ -902,14 +996,12 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      *
      * @return list<array{name: string, contents: mixed}>
      */
-    public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId): array
+    public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId, bool $stockMode = true): array
     {
         $order->loadMissing(['client', 'items.product']);
         $settings = $company->api_settings ?? [];
-        $useCodQuantity = $this->sendsWithoutStockCheck($company);
 
         $multipart = [
-            ['name' => 'type', 'contents' => 'STOCK'],
             ['name' => 'business', 'contents' => $businessId],
             ['name' => 'order_num', 'contents' => (string) $order->order_number],
             ['name' => 'replace', 'contents' => 'false'],
@@ -922,14 +1014,20 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ['name' => 'city', 'contents' => $cityId],
             ['name' => 'address', 'contents' => (string) $order->address],
             ['name' => 'comment', 'contents' => (string) ($order->notes ?? '')],
-            ['name' => 'product', 'contents' => $useCodQuantity
-                ? $this->productSummaryWithCodQuantities($order)
-                : $this->productSummary($order)],
+            ['name' => 'product', 'contents' => $stockMode
+                ? $this->productSummary($order)
+                : $this->productSummaryWithCodQuantities($order)],
             ['name' => 'cod', 'contents' => (string) $order->final_amount],
             ['name' => 'staff', 'contents' => ''],
         ];
 
-        return $this->withProductReferences($multipart, $order);
+        if ($stockMode) {
+            array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
+
+            return $this->withProductReferences($multipart, $order);
+        }
+
+        return $multipart;
     }
 
     /**

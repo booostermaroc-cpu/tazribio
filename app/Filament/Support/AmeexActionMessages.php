@@ -17,7 +17,7 @@ class AmeexActionMessages
                 return $message;
             }
 
-            return 'Le colis sera envoyé en mode STOCK avec la quantité COD, le hub Ameex et les références produit.';
+            return 'Le colis sera envoyé avec la quantité COD, sans déduction du stock entrepôt Ameex.';
         }
 
         $key = 'codflow.delivery.ameex_stock_confirm';

@@ -57,7 +57,14 @@ class CodflowAmeexSendTest extends Command
 
         if ($shipment !== null) {
             $this->line('Tracking: '.($shipment->tracking_number ?? '—'));
+            $raw = is_array($shipment->ameex_raw_response) ? $shipment->ameex_raw_response : [];
+            $this->line('Mode STOCK colis: '.((($raw['ameex_parcel_stock_mode'] ?? false) === true) ? 'oui' : 'non'));
+            $this->line('Hub colis payload: '.($raw['ameex_parcel_hub_id'] ?? '—'));
             $this->line('Commande Ameex sync: '.($ameex->isAmeexOrderSynced($shipment) ? 'oui' : 'non'));
+
+            if (filled($raw['ameex_order_sync_error'] ?? null)) {
+                $this->warn('Dernière erreur sync warehouse: '.$raw['ameex_order_sync_error']);
+            }
         }
 
         foreach ($order->items as $item) {
@@ -89,6 +96,10 @@ class CodflowAmeexSendTest extends Command
 
             $result = $integration->sendShipmentOrderToAmeex($shipment);
         } else {
+            if ($shipment !== null && $ameex->isAmeexOrderSynced($shipment->fresh())) {
+                $this->warn('Colis déjà envoyé. Pour créer la commande warehouse : --order-only --force');
+            }
+
             $result = $integration->sendOrderToCarrier($order);
         }
 

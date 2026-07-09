@@ -858,6 +858,25 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         $result = $this->postCreateShipmentParcel($company, $order, $shipment, $path, $businessId, $cityId, stockMode: true);
 
+        if (! ($result['success'] ?? false) && ($result['insufficient_stock'] ?? false) && filled($this->hubId($company))) {
+            Log::info('Ameex STOCK with sender business failed, retrying STOCK with hub as business', [
+                'order_id' => $order->id,
+                'shipment_id' => $shipment->id,
+                'hub_id' => $this->hubId($company),
+            ]);
+
+            $result = $this->postCreateShipmentParcel(
+                $company,
+                $order,
+                $shipment,
+                $path,
+                $businessId,
+                $cityId,
+                stockMode: true,
+                hubAsBusiness: true,
+            );
+        }
+
         if (! ($result['success'] ?? false) && ($result['insufficient_stock'] ?? false)) {
             Log::info('Ameex stock insufficient, retrying parcel without STOCK deduction', [
                 'order_id' => $order->id,
@@ -882,9 +901,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         string $cityId,
         bool $stockMode = true,
         bool $withoutStockFallback = false,
+        bool $hubAsBusiness = false,
     ): array {
         try {
-            $multipart = $this->buildCreateShipmentPayload($company, $order, $businessId, $cityId, $stockMode);
+            $multipart = $this->buildCreateShipmentPayload($company, $order, $businessId, $cityId, $stockMode, $hubAsBusiness);
 
             if (config('app.debug')) {
                 Log::debug('Ameex create parcel payload', [
@@ -938,6 +958,8 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 'message' => $message,
                 'raw' => array_merge($raw, [
                     'ameex_parcel_stock_mode' => $stockMode,
+                    'ameex_parcel_hub_id' => $this->hubId($company),
+                    'ameex_parcel_hub_as_business' => $hubAsBusiness,
                 ]),
             ];
         } catch (\Throwable $exception) {
@@ -1044,6 +1066,23 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         }
 
         if ($stockResult['insufficient_stock'] ?? false) {
+            if (filled($this->hubId($company))) {
+                $hubStockResult = $this->tryCreateAmeexOrderOnPaths(
+                    $company,
+                    $shipment,
+                    $order,
+                    (string) $businessId,
+                    (string) $cityId,
+                    $paths,
+                    stockMode: true,
+                    hubAsBusiness: true,
+                );
+
+                if ($hubStockResult['success'] ?? false) {
+                    return array_merge($hubStockResult, ['warehouse_synced' => true]);
+                }
+            }
+
             return [
                 'success' => false,
                 'message' => __('codflow.delivery.ameex_warehouse_stock_required', [
@@ -1093,6 +1132,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         array $paths,
         bool $stockMode = true,
         bool $withoutStockFallback = false,
+        bool $hubAsBusiness = false,
     ): array {
         $lastResult = ['success' => false, 'message' => __('codflow.delivery.ameex_order_endpoint_missing')];
 
@@ -1106,6 +1146,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 $cityId,
                 $stockMode,
                 $withoutStockFallback,
+                $hubAsBusiness,
             );
 
             if ($result['success'] ?? false) {
@@ -1144,15 +1185,17 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
         string $cityId,
         bool $stockMode = true,
         bool $withoutStockFallback = false,
+        bool $hubAsBusiness = false,
     ): array {
         try {
-            $multipart = $this->buildCreateAmeexOrderPayload($company, $shipment, $order, $businessId, $cityId, $stockMode);
+            $multipart = $this->buildCreateAmeexOrderPayload($company, $shipment, $order, $businessId, $cityId, $stockMode, $hubAsBusiness);
 
             if (config('app.debug')) {
                 Log::debug('Ameex create order payload', [
                     'shipment_id' => $shipment->id,
                     'order_id' => $order->id,
                     'stock_mode' => $stockMode,
+                    'hub_as_business' => $hubAsBusiness,
                     'payload' => $this->multipartToLoggablePayload($multipart),
                 ]);
             }
@@ -1206,6 +1249,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                     'ameex_order_warehouse' => $stockMode,
                     'ameex_order_manual' => ! $stockMode,
                     'ameex_order_path' => $path,
+                    'ameex_order_hub_as_business' => $hubAsBusiness,
                 ]),
             ]);
 
@@ -1235,7 +1279,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     /**
      * @return list<array{name: string, contents: mixed}>
      */
-    public function buildCreateAmeexOrderPayload(DeliveryCompany $company, Shipment $shipment, Order $order, string $businessId, string $cityId, bool $stockMode = true): array
+    public function buildCreateAmeexOrderPayload(DeliveryCompany $company, Shipment $shipment, Order $order, string $businessId, string $cityId, bool $stockMode = true, bool $hubAsBusiness = false): array
     {
         $order->loadMissing(['client', 'items.product']);
 
@@ -1256,11 +1300,10 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
-
-            return $this->withStockHub($this->withProductReferences($multipart, $order), $company);
+            $multipart = $this->withProductReferences($multipart, $order);
         }
 
-        return $multipart;
+        return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness);
     }
 
     /**
@@ -1331,10 +1374,11 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      *
      * @return list<array{name: string, contents: mixed}>
      */
-    public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId, bool $stockMode = true): array
+    public function buildCreateShipmentPayload(DeliveryCompany $company, Order $order, string $businessId, string $cityId, bool $stockMode = true, bool $hubAsBusiness = false): array
     {
         $order->loadMissing(['client', 'items.product']);
         $settings = $company->api_settings ?? [];
+        $hubId = $this->hubId($company);
 
         $multipart = [
             ['name' => 'business', 'contents' => $businessId],
@@ -1353,14 +1397,53 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ? $this->productSummary($order)
                 : $this->productSummaryWithCodQuantities($order)],
             ['name' => 'cod', 'contents' => (string) $order->final_amount],
-            ['name' => 'staff', 'contents' => ''],
+            ['name' => 'staff', 'contents' => (string) ($hubId ?? '')],
         ];
 
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
-
-            return $this->withStockHub($this->withProductReferences($multipart, $order), $company);
+            $multipart = $this->withProductReferences($multipart, $order);
         }
+
+        return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness);
+    }
+
+    /**
+     * @param  list<array{name: string, contents: mixed}>  $multipart
+     * @return list<array{name: string, contents: mixed}>
+     */
+    protected function applyBusinessAndHubFields(array $multipart, DeliveryCompany $company, string $senderBusinessId, bool $hubAsBusiness = false): array
+    {
+        $hubId = $this->hubId($company);
+
+        if (blank($hubId)) {
+            return $multipart;
+        }
+
+        if ($hubAsBusiness) {
+            $multipart = $this->setMultipartField($multipart, 'business', $hubId);
+            $multipart = $this->ensureMultipartField($multipart, 'mdl_business', $senderBusinessId);
+        }
+
+        return $this->withHubFields($multipart, $company);
+    }
+
+    /**
+     * @param  list<array{name: string, contents: mixed}>  $multipart
+     * @return list<array{name: string, contents: mixed}>
+     */
+    protected function withHubFields(array $multipart, DeliveryCompany $company): array
+    {
+        $hubId = $this->hubId($company);
+
+        if (blank($hubId)) {
+            return $multipart;
+        }
+
+        $multipart = $this->setMultipartField($multipart, 'staff', $hubId);
+        $multipart = $this->ensureMultipartField($multipart, 'hub', $hubId);
+        $multipart = $this->ensureMultipartField($multipart, 'mdl_hub', $hubId);
+        $multipart = $this->ensureMultipartField($multipart, 'hub_id', $hubId);
 
         return $multipart;
     }
@@ -1369,13 +1452,34 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      * @param  list<array{name: string, contents: mixed}>  $multipart
      * @return list<array{name: string, contents: mixed}>
      */
-    protected function withStockHub(array $multipart, DeliveryCompany $company): array
+    protected function setMultipartField(array $multipart, string $name, string $value): array
     {
-        $hubId = $this->hubId($company);
+        foreach ($multipart as $index => $field) {
+            if (($field['name'] ?? null) === $name) {
+                $multipart[$index]['contents'] = $value;
 
-        if (filled($hubId)) {
-            $multipart[] = ['name' => 'hub', 'contents' => $hubId];
+                return $multipart;
+            }
         }
+
+        $multipart[] = ['name' => $name, 'contents' => $value];
+
+        return $multipart;
+    }
+
+    /**
+     * @param  list<array{name: string, contents: mixed}>  $multipart
+     * @return list<array{name: string, contents: mixed}>
+     */
+    protected function ensureMultipartField(array $multipart, string $name, string $value): array
+    {
+        foreach ($multipart as $field) {
+            if (($field['name'] ?? null) === $name) {
+                return $multipart;
+            }
+        }
+
+        $multipart[] = ['name' => $name, 'contents' => $value];
 
         return $multipart;
     }

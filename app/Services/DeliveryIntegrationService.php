@@ -433,6 +433,14 @@ class DeliveryIntegrationService
             'message' => $orderResult['message'] ?? __('codflow.delivery.api_error'),
         ]);
 
+        $previousRaw = is_array($shipment->ameex_raw_response) ? $shipment->ameex_raw_response : [];
+        $shipment->update([
+            'ameex_raw_response' => array_merge($previousRaw, [
+                'ameex_order_sync_error' => $orderResult['message'] ?? __('codflow.delivery.api_error'),
+                'ameex_order_synced' => false,
+            ]),
+        ]);
+
         return $parcelMessage.' '.__('codflow.delivery.ameex_order_auto_failed', [
             'reason' => $orderResult['message'] ?? __('codflow.delivery.api_error'),
         ]);

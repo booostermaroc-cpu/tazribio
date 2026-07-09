@@ -652,7 +652,7 @@ return [
         'ameex_send_and_warehouse_success' => 'Colis envoyé et commande warehouse Ameex créée (mode STOCK, visible dans Warehouse → Commandes).',
         'ameex_warehouse_order_success' => 'Commande warehouse Ameex créée pour le colis :tracking (mode STOCK).',
         'ameex_warehouse_requires_hub' => 'Hub Ameex incorrect : business_id est identique au C-Api-Id (21820). Transporteurs → AMEEX → Synchroniser les expéditeurs → choisir AGADIR HUB PRINCIPAL.',
-        'ameex_warehouse_stock_required' => 'Impossible de créer la commande warehouse : stock Ameex insuffisant. Ajoutez du stock dans Ameex → Stock / Entrepôt (hub AGADIR), puis réessayez. Détail : :reason',
+        'ameex_warehouse_stock_required' => 'Stock Ameex insuffisant pour la commande warehouse. Ajoutez du stock dans Ameex → Warehouse → Stock (hub AGADIR), puis relancez avec --order-only --force.',
         'ameex_delivery_only_no_warehouse' => 'Attention : cette commande n\'apparaîtra pas dans Warehouse → Commandes (mode Livraison uniquement, sans STOCK).',
         'ameex_manual_order_success' => 'Commande manuelle Ameex créée pour le colis :tracking.',
         'ameex_manual_order_requires_tracking' => 'Impossible de créer la commande Ameex : le colis doit d\'abord avoir un numéro de suivi.',

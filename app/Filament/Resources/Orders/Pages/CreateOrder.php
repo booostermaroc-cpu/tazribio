@@ -17,6 +17,16 @@ class CreateOrder extends CreateRecord
 {
     protected static string $resource = OrderResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        $state = $this->form->getRawState();
+        $this->form->fill(array_merge($state, [
+            'delivery_fee' => 15,
+        ]));
+    }
+
     protected function getRedirectUrl(): string
     {
         return OrderResource::getUrl('edit', ['record' => $this->getRecord()]);
@@ -42,12 +52,18 @@ class CreateOrder extends CreateRecord
         $client = filled($clientId) ? Client::query()->find($clientId) : null;
         $phone = $client?->phone ?? ($raw['client_phone'] ?? null);
         $clientName = $client?->full_name ?? ($raw['client_full_name'] ?? null);
+        $items = is_array($raw['items'] ?? null) ? $raw['items'] : [];
+        $totals = app(OrderCalculationService::class)->calculateTotals(
+            $items,
+            (float) ($raw['delivery_fee'] ?? 15),
+            (float) ($raw['discount'] ?? 0),
+        );
 
         return WhatsAppUrl::url(
             $phone,
             OrderContactActions::newOrderMessage(
                 $raw['order_number'] ?? null,
-                isset($raw['final_amount']) ? (float) $raw['final_amount'] : null,
+                $totals['carrier_cod_amount'],
                 $clientName,
             ),
         );

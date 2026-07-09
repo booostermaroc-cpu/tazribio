@@ -30,6 +30,13 @@ class EditOrder extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['carrier_cod_preview'] = round(max(0, (float) ($data['total_amount'] ?? 0) - (float) ($data['discount'] ?? 0)), 2);
+
+        return $data;
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $raw = $this->form->getRawState();

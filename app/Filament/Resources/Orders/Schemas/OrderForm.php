@@ -208,8 +208,8 @@ class OrderForm
                             ->label(Labels::field('delivery_fee'))
                             ->numeric()
                             ->prefix('MAD')
-                            ->default(fn () => SettingService::get()->default_delivery_fee ?? 15)
-                            ->helperText(__('codflow.order.order_commission_hint'))
+                            ->default(15)
+                            ->helperText('Commission déduite du montant colis. Ameex reçoit le prix produit (sous-total − remise).')
                             ->minValue(0)
                             ->required()
                             ->live()
@@ -229,6 +229,14 @@ class OrderForm
                             ->disabled()
                             ->dehydrated()
                             ->default(0),
+                        TextInput::make('carrier_cod_preview')
+                            ->label(__('codflow.order.carrier_cod_amount'))
+                            ->numeric()
+                            ->prefix('MAD')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->default(0)
+                            ->helperText(__('codflow.order.carrier_cod_amount_hint')),
                         Toggle::make('profit_is_manual')
                             ->label(__('codflow.order.profit_manual'))
                             ->helperText(__('codflow.order.profit_manual_hint'))
@@ -251,7 +259,7 @@ class OrderForm
                                 ? (string) app(OrderProfitService::class)->calculateAuto($record)
                                 : null),
                     ])
-                    ->columns(4)
+                    ->columns(5)
                     ->columnSpanFull(),
                 Section::make(Labels::section('payment'))
                     ->schema([
@@ -318,5 +326,6 @@ class OrderForm
 
         $set('total_amount', $totals['total_amount']);
         $set('final_amount', $totals['final_amount']);
+        $set('carrier_cod_preview', $totals['carrier_cod_amount']);
     }
 }

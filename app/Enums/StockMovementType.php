@@ -13,10 +13,6 @@ enum StockMovementType: string
     case Adjustment = 'adjustment';
     case Return = 'return';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

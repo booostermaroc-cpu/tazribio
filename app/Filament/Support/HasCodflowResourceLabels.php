@@ -15,12 +15,12 @@ trait HasCodflowResourceLabels
 
     public static function getModelLabel(): string
     {
-        return __(static::codflowTranslationKey('singular'));
+        return CodflowLabels::get(static::codflowTranslationKey('singular'));
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __(static::codflowTranslationKey('plural'));
+        return CodflowLabels::get(static::codflowTranslationKey('plural'));
     }
 
     public static function hasTitleCaseModelLabel(): bool

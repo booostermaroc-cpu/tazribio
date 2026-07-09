@@ -61,7 +61,7 @@ class ViewOrder extends ViewRecord
                                 ->where('is_active', true)
                                 ->first()
                     ))
-                    ->modalSubmitActionLabel('Confirmer')
+                    ->modalSubmitActionLabel(__('codflow.actions.confirm'))
                     ->visible(fn (Order $record) => ! $record->shipments()
                         ->where(function ($query): void {
                             $query->where(function ($inner): void {

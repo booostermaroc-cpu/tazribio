@@ -12,10 +12,6 @@ enum DeliveryProvider: string
     case Ameex = 'ameex';
     case Other = 'other';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

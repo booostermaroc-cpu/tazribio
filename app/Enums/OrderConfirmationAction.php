@@ -24,10 +24,6 @@ enum OrderConfirmationAction: string
     case OrderPrepared = 'order_prepared';
     case OrderShipped = 'order_shipped';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

@@ -38,11 +38,11 @@ class OrderContactActions
 
     public static function orderMessage(Order $order): string
     {
-        return trim(__('codflow.order.whatsapp_message'));
+        return trim(CodflowLabels::order('whatsapp_message'));
     }
 
     public static function newOrderMessage(?string $orderNumber, ?float $amount, ?string $clientName = null): string
     {
-        return trim(__('codflow.order.whatsapp_message'));
+        return trim(CodflowLabels::order('whatsapp_message'));
     }
 }

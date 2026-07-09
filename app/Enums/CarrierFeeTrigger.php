@@ -13,8 +13,4 @@ enum CarrierFeeTrigger: string
     case ReturnedPackaged = 'returned_packaged';
     case Shipped = 'shipped';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 }

@@ -31,24 +31,9 @@ class AmeexLabels
     /** @param  array<string, string|int>  $replace */
     public static function delivery(string $key, array $replace = []): string
     {
-        $fullKey = "codflow.delivery.{$key}";
-        $translated = __($fullKey, $replace);
+        $hardFallback = static::$deliveryFallbacks[$key] ?? null;
 
-        if ($translated !== $fullKey) {
-            return $translated;
-        }
-
-        $fallback = static::$deliveryFallbacks[$key] ?? null;
-
-        if ($fallback === null) {
-            return $key;
-        }
-
-        foreach ($replace as $search => $value) {
-            $fallback = str_replace(':'.$search, (string) $value, $fallback);
-        }
-
-        return $fallback;
+        return CodflowLabels::delivery($key, $replace, $hardFallback);
     }
 
     /** @param  array<string, string>  $options */

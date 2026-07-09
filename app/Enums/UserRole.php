@@ -15,10 +15,6 @@ enum UserRole: string
     case StockManager = 'stock_manager';
     case Finance = 'finance';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

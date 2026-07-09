@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Filament\Support\CodflowLabels;
+
 enum AppResource: string
 {
     case Orders = 'orders';
@@ -25,7 +27,7 @@ enum AppResource: string
 
     public function label(): string
     {
-        return __("codflow.nav.{$this->value}");
+        return CodflowLabels::get("nav.{$this->value}");
     }
 
     /** @return array<string, string> */

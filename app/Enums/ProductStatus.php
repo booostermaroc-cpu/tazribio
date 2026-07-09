@@ -11,10 +11,6 @@ enum ProductStatus: string
     case Active = 'active';
     case Inactive = 'inactive';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

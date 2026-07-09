@@ -155,8 +155,8 @@ return [
         'contact_call' => 'Appeler le client',
         'default_client_name' => 'client',
         'whatsapp_message' => <<<'MSG'
-السلام عليكم، هاهي لاكموند راه bien emballé وداك الخير انشاءلله راه كيما بغيتيه وبأحسن حلة
-كيما قلتليك غدا انشاءلله ولا بعدو كحد أقصى غايتاصل بيك الليفرور باش ايجيبها ليك ( وراه عندك الحق تقلبها قبل ماتخلص الليفرور ).
+Bonjour, votre commande est bien emballée et, inchallah, elle correspond à votre demande et est en parfait état.
+Comme convenu, demain inchallah ou au plus tard après, le livreur vous contactera pour la livrer (vous avez le droit de vérifier le colis avant de payer le livreur).
 MSG,
         'confirm_modal_title' => 'Confirmer le colis',
         'confirm_modal_description' => 'Comment avez-vous contacté le client pour confirmer ce colis ?',
@@ -411,6 +411,13 @@ MSG,
         'version' => 'Version',
     ],
 
+    'pdf' => [
+        'date' => 'Date',
+        'total' => 'Total',
+        'cod_total_ameex' => 'Total COD client (Ameex)',
+        'generated_footer' => 'Document généré par :company — :datetime',
+    ],
+
     'locale' => [
         'french' => 'Français',
         'arabic' => 'العربية',
@@ -589,6 +596,7 @@ MSG,
         'export_excel' => 'Exporter Excel',
         'import_excel' => 'Importer Excel',
         'download_template' => 'Télécharger le modèle',
+        'confirm' => 'Confirmer',
     ],
 
     'users' => [

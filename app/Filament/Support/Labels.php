@@ -2,7 +2,6 @@
 
 namespace App\Filament\Support;
 
-use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 
 class Labels
@@ -40,27 +39,28 @@ class Labels
 
     public static function field(string $key): string
     {
-        return __("codflow.fields.{$key}");
+        return CodflowLabels::field($key);
     }
 
     public static function section(string $key): string
     {
-        return __("codflow.sections.{$key}");
+        return CodflowLabels::section($key);
     }
 
     public static function action(string $key): string
     {
-        return __("codflow.actions.{$key}");
+        return CodflowLabels::action($key);
     }
 
     public static function filter(string $key): string
     {
-        return __("codflow.filters.{$key}");
+        return CodflowLabels::filter($key);
     }
 
     public static function has(string $key): bool
     {
-        return Lang::has("codflow.fields.{$key}");
+        return \Illuminate\Support\Facades\Lang::has("codflow.fields.{$key}", app()->getLocale())
+            || \Illuminate\Support\Facades\Lang::has("codflow.fields.{$key}", 'fr');
     }
 
     public static function resolve(?string $name): ?string

@@ -2,6 +2,7 @@
 
 namespace App\Enums\Concerns;
 
+use App\Filament\Support\CodflowLabels;
 use Illuminate\Support\Str;
 
 trait HasColorAndLabel
@@ -22,8 +23,11 @@ trait HasColorAndLabel
 
     protected function translatedLabel(string $fallback): string
     {
-        $translated = __($this->enumTranslationKey());
+        return CodflowLabels::get(Str::after($this->enumTranslationKey(), 'codflow.'));
+    }
 
-        return $translated === $this->enumTranslationKey() ? $fallback : $translated;
+    public function label(): string
+    {
+        return $this->translatedLabel(Str::headline($this->value));
     }
 }

@@ -13,10 +13,6 @@ enum PickupRequestStatus: string
     case Done = 'done';
     case Cancelled = 'cancelled';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

@@ -13,10 +13,6 @@ enum ReturnBonStatus: string
     case Received = 'received';
     case Refused = 'refused';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

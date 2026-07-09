@@ -11,10 +11,6 @@ enum CommissionApplyOn: string
     case Confirmed = 'confirmed';
     case Delivered = 'delivered';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

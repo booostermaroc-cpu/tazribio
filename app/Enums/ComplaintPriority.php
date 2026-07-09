@@ -12,10 +12,6 @@ enum ComplaintPriority: string
     case Medium = 'medium';
     case High = 'high';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

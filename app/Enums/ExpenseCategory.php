@@ -15,10 +15,6 @@ enum ExpenseCategory: string
     case Salary = 'salary';
     case Other = 'other';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

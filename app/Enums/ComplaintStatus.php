@@ -13,10 +13,6 @@ enum ComplaintStatus: string
     case Resolved = 'resolved';
     case Rejected = 'rejected';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

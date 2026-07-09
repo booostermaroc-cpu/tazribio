@@ -12,10 +12,6 @@ enum PaymentPlanningStatus: string
     case Received = 'received';
     case Delayed = 'delayed';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

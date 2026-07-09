@@ -44,24 +44,24 @@ class CodFlowStatsOverview extends StatsOverviewWidget
                 ->descriptionIcon(Heroicon::OutlinedArrowTrendingUp)
                 ->icon(Heroicon::OutlinedShoppingBag)
                 ->color('primary'),
-            Stat::make(__('codflow.dashboard.delivered'), number_format($metrics['delivered']))
+            Stat::make(DashboardLabels::get('delivered'), number_format($metrics['delivered']))
                 ->description($metrics['delivered_trend']['text'])
                 ->descriptionColor($metrics['delivered_trend']['color'])
                 ->descriptionIcon(Heroicon::OutlinedCheckBadge)
                 ->icon(Heroicon::OutlinedTruck)
                 ->color('success'),
-            Stat::make(__('codflow.dashboard.returned'), number_format($metrics['returned']))
-                ->description(__('codflow.dashboard.distribution.returned'))
+            Stat::make(DashboardLabels::get('returned'), number_format($metrics['returned']))
+                ->description(DashboardLabels::get('distribution.returned'))
                 ->descriptionColor('warning')
                 ->icon(Heroicon::OutlinedArrowPathRoundedSquare)
                 ->color('warning'),
-            Stat::make(__('codflow.dashboard.cancelled'), number_format($metrics['cancelled']))
-                ->description(__('codflow.dashboard.distribution.cancelled'))
+            Stat::make(DashboardLabels::get('cancelled'), number_format($metrics['cancelled']))
+                ->description(DashboardLabels::get('distribution.cancelled'))
                 ->descriptionColor('danger')
                 ->icon(Heroicon::OutlinedXCircle)
                 ->color('danger'),
-            Stat::make(__('codflow.dashboard.stuck_at_carrier'), number_format($metrics['stuck_at_carrier_amount'], 0, ',', ' ').' MAD')
-                ->description(__('codflow.dashboard.stuck_at_carrier_hint', [
+            Stat::make(DashboardLabels::get('stuck_at_carrier'), number_format($metrics['stuck_at_carrier_amount'], 0, ',', ' ').' MAD')
+                ->description(DashboardLabels::get('stuck_at_carrier_hint', [
                     'count' => number_format($metrics['stuck_at_carrier']),
                     'days' => \App\Support\CarrierStuckOrders::thresholdDays(),
                 ]))
@@ -69,20 +69,20 @@ class CodFlowStatsOverview extends StatsOverviewWidget
                 ->icon(Heroicon::OutlinedClock)
                 ->color('danger')
                 ->url(OrderResource::getUrl('index')),
-            Stat::make(__('codflow.dashboard.revenue'), number_format($metrics['revenue'], 0, ',', ' ').' MAD')
+            Stat::make(DashboardLabels::get('revenue'), number_format($metrics['revenue'], 0, ',', ' ').' MAD')
                 ->description($metrics['revenue_trend']['text'])
                 ->descriptionColor($metrics['revenue_trend']['color'])
                 ->descriptionIcon(Heroicon::OutlinedBanknotes)
                 ->icon(Heroicon::OutlinedCurrencyDollar)
                 ->color('info')
-                ->extraAttributes(['title' => __('codflow.dashboard.revenue_hint')]),
-            Stat::make(__('codflow.dashboard.profit'), number_format($metrics['estimated_profit'], 0, ',', ' ').' MAD')
+                ->extraAttributes(['title' => DashboardLabels::get('revenue_hint')]),
+            Stat::make(DashboardLabels::get('profit'), number_format($metrics['estimated_profit'], 0, ',', ' ').' MAD')
                 ->description($profitHint)
                 ->descriptionColor($metrics['revenue_trend']['color'])
                 ->icon(Heroicon::OutlinedPresentationChartLine)
                 ->color('primary'),
-            Stat::make(__('codflow.dashboard.carrier_payable'), number_format($metrics['carrier_payable'], 0, ',', ' ').' MAD')
-                ->description(__('codflow.dashboard.carrier_payable_month', ['amount' => number_format($metrics['carrier_payable_month'], 0, ',', ' ')]))
+            Stat::make(DashboardLabels::get('carrier_payable'), number_format($metrics['carrier_payable'], 0, ',', ' ').' MAD')
+                ->description(DashboardLabels::get('carrier_payable_month', ['amount' => number_format($metrics['carrier_payable_month'], 0, ',', ' ')]))
                 ->descriptionColor('danger')
                 ->icon(Heroicon::OutlinedTruck)
                 ->color('danger'),

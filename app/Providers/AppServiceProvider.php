@@ -11,7 +11,9 @@ use App\Observers\OrderObserver;
 use App\Observers\ReturnBonObserver;
 use App\Observers\ShipmentObserver;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -36,6 +38,22 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return null;
+        });
+
+        Lang::handleMissingKeysUsing(function (string $key, array $replace, string $locale): string {
+            if (! str_starts_with($key, 'codflow.')) {
+                return $key;
+            }
+
+            if ($locale !== 'fr') {
+                $fr = Lang::get($key, $replace, 'fr');
+
+                if ($fr !== $key) {
+                    return $fr;
+                }
+            }
+
+            return Str::headline(str_replace(['.', '_'], ' ', Str::afterLast($key, '.')));
         });
     }
 }

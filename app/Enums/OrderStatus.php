@@ -21,10 +21,6 @@ enum OrderStatus: string
     case Returned = 'returned';
     case Cancelled = 'cancelled';
 
-    public function label(): string
-    {
-        return __($this->enumTranslationKey());
-    }
 
     public function color(): string
     {

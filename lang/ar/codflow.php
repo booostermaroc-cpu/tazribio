@@ -14,6 +14,8 @@ return array (
       'system' => 'النظام',
     ),
     'dashboard' => 'لوحة التحكم',
+    'ai' => 'AI',
+    'demo' => 'تجريبي',
     'orders' => 'الطلبات',
     'products' => 'المنتجات',
     'clients' => 'العملاء',
@@ -111,10 +113,8 @@ return array (
     'carrier_cod' => 'مبلغ COD للناقل',
     'carrier_cod_hint' => 'سعر المنتج المرسل إلى Ameex (بدون خصم رسوم التوصيل).',
     'contact_whatsapp' => 'التواصل عبر واتساب',
-    'whatsapp_message' => <<<'MSG'
-السلام عليكم، هاهي لاكموند راه bien emballé وداك الخير انشاءلله راه كيما بغيتيه وبأحسن حلة
-كيما قلتليك غدا انشاءلله ولا بعدو كحد أقصى غايتاصل بيك الليفرور باش ايجيبها ليك ( وراه عندك الحق تقلبها قبل ماتخلص الليفرور ).
-MSG,
+    'whatsapp_message' => 'السلام عليكم، هاهي لاكموند راه bien emballé وداك الخير انشاءلله راه كيما بغيتيه وبأحسن حلة
+كيما قلتليك غدا انشاءلله ولا بعدو كحد أقصى غايتاصل بيك الليفرور باش ايجيبها ليك ( وراه عندك الحق تقلبها قبل ماتخلص الليفرور ).',
     'download_pdf' => 'Télécharger PDF',
     'status_changed' => 'Statut mis à jour : :status',
     'contact_call' => 'Appeler le client',
@@ -940,5 +940,28 @@ MSG,
     'total' => 'Total',
     'cod_total_ameex' => 'Total COD client (Ameex)',
     'generated_footer' => 'Document généré par :company — :datetime',
+  ),
+  'ai' => 
+  array (
+    'help' => 'Assistant manuel en darija — choisissez un module ou posez une question sur le système.',
+    'topics_title' => 'Modules du système',
+    'you' => 'Vous',
+    'assistant' => 'Assistant Tazri Bio',
+    'input_placeholder' => 'Posez une question (ex: colis, stock, ameex…)',
+    'send' => 'Envoyer',
+  ),
+  'demo' => 
+  array (
+    'upload_action' => 'Téléverser une vidéo',
+    'upload_label' => 'Vidéo de démonstration',
+    'upload_help' => 'MP4, WebM ou MOV — taille max. 50 Mo.',
+    'upload_success' => 'Vidéo enregistrée avec succès.',
+    'upload_failed' => 'Échec du téléversement. Vérifiez le format et la taille.',
+    'delete_action' => 'Supprimer la vidéo',
+    'delete_confirm' => 'Supprimer la vidéo de démonstration ?',
+    'delete_success' => 'Vidéo supprimée.',
+    'no_video' => 'Aucune vidéo de démonstration pour le moment.',
+    'admin_upload_hint' => 'Utilisez le bouton « Téléverser une vidéo » en haut de page.',
+    'video_unsupported' => 'Votre navigateur ne supporte pas la lecture vidéo.',
   ),
 );

@@ -10,6 +10,7 @@ class Setting extends Model
     protected $fillable = [
         'company_name',
         'logo',
+        'demo_video',
         'phone',
         'address',
         'rib',

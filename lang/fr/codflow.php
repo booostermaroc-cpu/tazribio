@@ -13,6 +13,8 @@ return [
             'system' => 'Système',
         ],
         'dashboard' => 'Tableau de bord',
+        'ai' => 'AI',
+        'demo' => 'Démo',
         'orders' => 'Colis',
         'products' => 'Produits',
         'clients' => 'Clients',
@@ -410,6 +412,29 @@ MSG,
     'footer' => [
         'rights' => 'Tous droits réservés.',
         'version' => 'Version',
+    ],
+
+    'ai' => [
+        'help' => 'Assistant manuel en darija — choisissez un module ou posez une question sur le système.',
+        'topics_title' => 'Modules du système',
+        'you' => 'Vous',
+        'assistant' => 'Assistant Tazri Bio',
+        'input_placeholder' => 'Posez une question (ex: colis, stock, ameex…)',
+        'send' => 'Envoyer',
+    ],
+
+    'demo' => [
+        'upload_action' => 'Téléverser une vidéo',
+        'upload_label' => 'Vidéo de démonstration',
+        'upload_help' => 'MP4, WebM ou MOV — taille max. 50 Mo.',
+        'upload_success' => 'Vidéo enregistrée avec succès.',
+        'upload_failed' => 'Échec du téléversement. Vérifiez le format et la taille.',
+        'delete_action' => 'Supprimer la vidéo',
+        'delete_confirm' => 'Supprimer la vidéo de démonstration ?',
+        'delete_success' => 'Vidéo supprimée.',
+        'no_video' => 'Aucune vidéo de démonstration pour le moment.',
+        'admin_upload_hint' => 'Utilisez le bouton « Téléverser une vidéo » en haut de page.',
+        'video_unsupported' => 'Votre navigateur ne supporte pas la lecture vidéo.',
     ],
 
     'pdf' => [

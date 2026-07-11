@@ -45,6 +45,24 @@ class SettingService
         return asset('storage/'.$logo);
     }
 
+    public static function demoVideoUrl(): ?string
+    {
+        $video = static::get()->demo_video;
+
+        if (blank($video)) {
+            return null;
+        }
+
+        /** @var FilesystemAdapter $publicDisk */
+        $publicDisk = Storage::disk('public');
+
+        if ($publicDisk->exists($video)) {
+            return $publicDisk->url($video);
+        }
+
+        return asset('storage/'.$video);
+    }
+
     public static function companyName(): string
     {
         return static::get()->company_name ?: __('codflow.brand');

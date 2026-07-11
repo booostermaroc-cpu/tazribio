@@ -75,10 +75,10 @@ class RolePermission
         return match ($role) {
             UserRole::Admin => AppResource::values(),
             UserRole::Manager => AppResource::values(),
-            UserRole::Agent => ['dashboard', 'orders', 'clients', 'complaints', 'return_bons', 'order_reviews'],
-            UserRole::StockManager => ['dashboard', 'products', 'warehouses', 'stock_movements'],
-            UserRole::DeliveryAgent => ['dashboard', 'shipments', 'delivery_companies', 'pickup_requests', 'orders'],
-            UserRole::Finance => ['dashboard', 'invoices', 'payment_plannings', 'expenses', 'orders'],
+            UserRole::Agent => ['dashboard', 'ai', 'demo', 'orders', 'clients', 'complaints', 'return_bons', 'order_reviews'],
+            UserRole::StockManager => ['dashboard', 'ai', 'demo', 'products', 'warehouses', 'stock_movements'],
+            UserRole::DeliveryAgent => ['dashboard', 'ai', 'demo', 'shipments', 'delivery_companies', 'pickup_requests', 'orders'],
+            UserRole::Finance => ['dashboard', 'ai', 'demo', 'invoices', 'payment_plannings', 'expenses', 'orders'],
         };
     }
 }

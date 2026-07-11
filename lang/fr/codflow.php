@@ -12,6 +12,7 @@ return [
             'team' => 'Équipe',
             'system' => 'Système',
         ],
+        'dashboard' => 'Tableau de bord',
         'orders' => 'Colis',
         'products' => 'Produits',
         'clients' => 'Clients',

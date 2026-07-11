@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Support\DashboardLabels;
+use App\Support\RolePermission;
 use BackedEnum;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Support\Icons\Heroicon;
@@ -12,6 +13,13 @@ class Dashboard extends BaseDashboard
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
     protected static ?int $navigationSort = -2;
+
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+
+        return $user !== null && RolePermission::canAccessResource($user, 'dashboard');
+    }
 
     public static function getNavigationLabel(): string
     {

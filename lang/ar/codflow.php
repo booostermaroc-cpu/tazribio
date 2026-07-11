@@ -13,6 +13,7 @@ return array (
       'team' => 'الفريق',
       'system' => 'النظام',
     ),
+    'dashboard' => 'لوحة التحكم',
     'orders' => 'الطلبات',
     'products' => 'المنتجات',
     'clients' => 'العملاء',

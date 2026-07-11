@@ -6,6 +6,7 @@ use App\Filament\Support\CodflowLabels;
 
 enum AppResource: string
 {
+    case Dashboard = 'dashboard';
     case Orders = 'orders';
     case Products = 'products';
     case Clients = 'clients';

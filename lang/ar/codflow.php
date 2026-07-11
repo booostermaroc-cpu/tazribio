@@ -954,7 +954,7 @@ return array (
   array (
     'upload_action' => 'Téléverser une vidéo',
     'upload_label' => 'Vidéo de démonstration',
-    'upload_help' => 'MP4, WebM ou MOV — taille max. 50 Mo.',
+    'upload_help' => 'MP4, WebM ou MOV — taille max. 2 Go.',
     'upload_success' => 'Vidéo enregistrée avec succès.',
     'upload_failed' => 'Échec du téléversement. Vérifiez le format et la taille.',
     'delete_action' => 'Supprimer la vidéo',

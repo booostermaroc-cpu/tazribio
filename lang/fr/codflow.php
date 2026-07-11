@@ -424,6 +424,8 @@ MSG,
     ],
 
     'demo' => [
+        'watch_link' => 'Cliquez ici pour voir la vidéo',
+        'drive_help' => 'La vidéo de démonstration est hébergée sur Google Drive.',
         'upload_action' => 'Téléverser une vidéo',
         'upload_label' => 'Vidéo de démonstration',
         'upload_help' => 'MP4, WebM ou MOV — taille max. 2 Go.',

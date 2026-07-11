@@ -952,6 +952,8 @@ return array (
   ),
   'demo' => 
   array (
+    'watch_link' => 'انقر هنا لمشاهدة الفيديو',
+    'drive_help' => 'فيديو العرض التوضيحي مستضاف على Google Drive.',
     'upload_action' => 'Téléverser une vidéo',
     'upload_label' => 'Vidéo de démonstration',
     'upload_help' => 'MP4, WebM ou MOV — taille max. 2 Go.',

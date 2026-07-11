@@ -79,10 +79,10 @@ sudo nano /etc/php/8.3/fpm/php.ini
 Set or verify:
 
 ```ini
-upload_max_filesize = 50M
-post_max_size = 50M
+upload_max_filesize = 2G
+post_max_size = 2G
 memory_limit = 512M
-max_execution_time = 120
+max_execution_time = 1800
 ```
 
 Restart PHP:

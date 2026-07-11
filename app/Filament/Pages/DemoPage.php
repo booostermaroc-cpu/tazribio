@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Storage;
 
 class DemoPage extends Page
 {
+    /** Taille max. vidéo : 2 Go (Filament attend des kilo-octets). */
+    private const MAX_VIDEO_SIZE_KB = 2 * 1024 * 1024;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPlay;
 
     protected static ?int $navigationSort = 0;
@@ -67,7 +70,7 @@ class DemoPage extends Page
                             'video/quicktime',
                             'video/x-msvideo',
                         ])
-                        ->maxSize(51_200)
+                        ->maxSize(self::MAX_VIDEO_SIZE_KB)
                         ->required(),
                 ])
                 ->action(function (array $data): void {

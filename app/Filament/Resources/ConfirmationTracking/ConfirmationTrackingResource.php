@@ -41,7 +41,11 @@ class ConfirmationTrackingResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['user', 'order.client']);
+            ->with([
+                'user',
+                'order' => fn ($query) => $query->withTrashed(),
+                'order.client',
+            ]);
     }
 
     public static function table(Table $table): Table

@@ -8,6 +8,7 @@ use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Support\EnumColumn;
 use App\Filament\Support\Labels;
 use App\Models\OrderConfirmationLog;
+use App\Services\ConfirmationTrackingService;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -35,10 +36,14 @@ class ConfirmationTrackingTable
                 TextColumn::make('order.order_number')
                     ->label(Labels::field('order'))
                     ->searchable()
-                    ->url(fn (OrderConfirmationLog $record) => OrderResource::getUrl('view', ['record' => $record->order_id])),
+                    ->placeholder('—')
+                    ->url(fn (OrderConfirmationLog $record): ?string => $record->order
+                        ? OrderResource::getUrl('view', ['record' => $record->order])
+                        : null),
                 TextColumn::make('order.client.full_name')
                     ->label(Labels::field('client'))
                     ->searchable()
+                    ->placeholder('—')
                     ->toggleable(),
                 EnumColumn::badge('action', OrderConfirmationAction::class),
                 TextColumn::make('order.status')
@@ -55,8 +60,9 @@ class ConfirmationTrackingTable
                 IconColumn::make('process_complete')
                     ->label(__('codflow.confirmation_tracking.process_complete'))
                     ->boolean()
-                    ->state(fn (OrderConfirmationLog $record): bool => app(\App\Services\ConfirmationTrackingService::class)
-                        ->processComplete($record->order))
+                    ->state(fn (OrderConfirmationLog $record): bool => $record->order
+                        ? app(ConfirmationTrackingService::class)->processComplete($record->order)
+                        : false)
                     ->visibleFrom('lg'),
             ])
             ->filters([

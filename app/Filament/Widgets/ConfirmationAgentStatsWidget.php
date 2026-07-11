@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\OrderConfirmationAction;
-use App\Models\OrderConfirmationLog;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -36,7 +35,7 @@ class ConfirmationAgentStatsWidget extends BaseWidget
                     ->label(OrderConfirmationAction::WhatsappContact->label())
                     ->alignCenter(),
                 TextColumn::make('call_count')
-                    ->label(OrderConfirmationAction::ConfirmedViaCall->label())
+                    ->label(OrderConfirmationAction::PhoneCall->label())
                     ->alignCenter(),
                 TextColumn::make('sms_count')
                     ->label(OrderConfirmationAction::SmsContact->label())
@@ -65,9 +64,9 @@ class ConfirmationAgentStatsWidget extends BaseWidget
     {
         $whatsapp = OrderConfirmationAction::WhatsappContact->value;
         $call = OrderConfirmationAction::PhoneCall->value;
+        $confirmedViaCall = OrderConfirmationAction::ConfirmedViaCall->value;
         $sms = OrderConfirmationAction::SmsContact->value;
         $confirmedViaWhatsapp = OrderConfirmationAction::ConfirmedViaWhatsapp->value;
-        $confirmedViaCall = OrderConfirmationAction::ConfirmedViaCall->value;
         $orderConfirmed = OrderConfirmationAction::OrderConfirmed->value;
         $prepared = OrderConfirmationAction::OrderPrepared->value;
         $shipped = OrderConfirmationAction::OrderShipped->value;
@@ -78,62 +77,16 @@ class ConfirmationAgentStatsWidget extends BaseWidget
         );
 
         return User::query()
-            ->select('users.id', 'users.name')
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->where('action', $whatsapp),
-                'whatsapp_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->whereIn('action', [$call, $confirmedViaCall]),
-                'call_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->where('action', $sms),
-                'sms_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->whereIn('action', [$confirmedViaWhatsapp, $orderConfirmed]),
-                'confirmed_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->where('action', $prepared),
-                'prepared_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->where('action', $shipped),
-                'shipped_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id')
-                    ->whereIn('action', $refusalActions),
-                'refusal_count'
-            )
-            ->selectSub(
-                OrderConfirmationLog::query()
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('order_confirmation_logs.user_id', 'users.id'),
-                'total_clicks'
-            )
+            ->withCount([
+                'confirmationLogs as whatsapp_count' => fn ($query) => $query->where('action', $whatsapp),
+                'confirmationLogs as call_count' => fn ($query) => $query->whereIn('action', [$call, $confirmedViaCall]),
+                'confirmationLogs as sms_count' => fn ($query) => $query->where('action', $sms),
+                'confirmationLogs as confirmed_count' => fn ($query) => $query->whereIn('action', [$confirmedViaWhatsapp, $orderConfirmed]),
+                'confirmationLogs as prepared_count' => fn ($query) => $query->where('action', $prepared),
+                'confirmationLogs as shipped_count' => fn ($query) => $query->where('action', $shipped),
+                'confirmationLogs as refusal_count' => fn ($query) => $query->whereIn('action', $refusalActions),
+                'confirmationLogs as total_clicks',
+            ])
             ->whereHas('confirmationLogs')
             ->orderByDesc('total_clicks');
     }

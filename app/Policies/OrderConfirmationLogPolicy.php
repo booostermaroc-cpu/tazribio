@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\RolePermission;
 
 class OrderConfirmationLogPolicy extends BasePolicy
 {
@@ -14,7 +15,11 @@ class OrderConfirmationLogPolicy extends BasePolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::Admin, UserRole::Manager], true);
+        if (! in_array($user->role, [UserRole::Admin, UserRole::Manager], true)) {
+            return false;
+        }
+
+        return RolePermission::canAccessResource($user, 'confirmation_tracking');
     }
 
     public function view(User $user, mixed $model): bool

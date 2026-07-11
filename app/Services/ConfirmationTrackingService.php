@@ -58,8 +58,12 @@ class ConfirmationTrackingService
             || $this->hasAction($order, OrderConfirmationAction::OrderConfirmed);
     }
 
-    public function processComplete(Order $order): bool
+    public function processComplete(?Order $order): bool
     {
+        if ($order === null) {
+            return false;
+        }
+
         if (! $this->hasConfirmedContact($order)) {
             return false;
         }

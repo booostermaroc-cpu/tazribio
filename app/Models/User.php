@@ -29,6 +29,11 @@ class User extends Authenticatable implements FilamentUser
         'is_active',
     ];
 
+    /** @var array<string, mixed> */
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',

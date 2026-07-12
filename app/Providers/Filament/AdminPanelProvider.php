@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Support\PanelHome;
 use App\Http\Middleware\SetLocale;
 use App\Services\SettingService;
 use Filament\Http\Middleware\Authenticate;
@@ -32,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            ->homeUrl(fn (): string => PanelHome::url())
             ->brandName(fn (): string => SettingService::companyName())
             ->brandLogo(fn (): ?string => SettingService::logoUrl())
             ->brandLogoHeight('2.5rem')

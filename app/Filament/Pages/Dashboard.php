@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Support\DashboardLabels;
+use App\Filament\Support\PanelHome;
 use App\Support\RolePermission;
 use BackedEnum;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -19,6 +20,18 @@ class Dashboard extends BaseDashboard
         $user = auth()->user();
 
         return $user !== null && RolePermission::canAccessResource($user, 'dashboard');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+
+    public function mountCanAuthorizeAccess(): void
+    {
+        if (! static::canAccess()) {
+            $this->redirect(PanelHome::url(), navigate: true);
+        }
     }
 
     public static function getNavigationLabel(): string

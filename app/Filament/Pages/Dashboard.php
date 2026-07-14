@@ -61,6 +61,7 @@ class Dashboard extends BaseDashboard
     public function getWidgets(): array
     {
         return [
+            \App\Filament\Widgets\DashboardWelcomeWidget::class,
             \App\Filament\Widgets\FinancialOverviewWidget::class,
             \App\Filament\Widgets\ParcelStatusOverviewWidget::class,
             \App\Filament\Widgets\OrderStatusChartWidget::class,

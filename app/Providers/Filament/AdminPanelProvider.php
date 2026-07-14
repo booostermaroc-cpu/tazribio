@@ -71,11 +71,6 @@ class AdminPanelProvider extends PanelProvider
                 scopes: Login::class,
             )
             ->renderHook(
-                PanelsRenderHook::PAGE_START,
-                fn (): HtmlString => new HtmlString(view('filament.hooks.dashboard-welcome')->render()),
-                scopes: Dashboard::class,
-            )
-            ->renderHook(
                 PanelsRenderHook::BODY_START,
                 fn (): HtmlString => new HtmlString(
                     app()->getLocale() === 'ar'

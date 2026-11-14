@@ -82,7 +82,11 @@ class DeliveryIntegrationService
             ]);
         }
 
-        $result = $service->createShipment($company, $order->loadMissing(['client', 'items.product']), $shipment);
+        if ($service instanceof AmeexDeliveryService) {
+            $service->actingAs(auth()->user());
+        }
+
+        $result = $service->createShipment($company, $order->loadMissing(['client', 'items.product', 'confirmer', 'creator']), $shipment);
 
         if ($result['success']) {
             if (blank($result['tracking_number'] ?? null)) {

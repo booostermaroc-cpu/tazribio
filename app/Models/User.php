@@ -21,6 +21,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'phone',
+        'ameex_staff_id',
         'role',
         'allowed_resources',
         'confirmation_commission_type',

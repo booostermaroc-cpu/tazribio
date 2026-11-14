@@ -84,6 +84,11 @@ class DeliveryCompanyForm
                         ->helperText(AmeexLabels::delivery('ameex_hub_id_help'))
                         ->placeholder('17')
                         ->columnSpanFull(),
+                    TextInput::make('ameex_staff_id')
+                        ->label(AmeexLabels::delivery('ameex_staff_id'))
+                        ->helperText(AmeexLabels::delivery('ameex_staff_id_help'))
+                        ->placeholder('4766')
+                        ->columnSpanFull(),
                     Placeholder::make('ameex_no_hub_warning')
                         ->content(AmeexLabels::delivery('ameex_no_hub_warning'))
                         ->visible(function (Get $get): bool {

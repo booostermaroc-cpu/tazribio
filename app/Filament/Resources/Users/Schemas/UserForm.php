@@ -42,6 +42,11 @@ class UserForm
                             ->label(Labels::field('phone'))
                             ->tel()
                             ->maxLength(191),
+                        TextInput::make('ameex_staff_id')
+                            ->label(__('codflow.delivery.ameex_staff_id'))
+                            ->helperText(__('codflow.delivery.ameex_user_staff_id_help'))
+                            ->maxLength(64)
+                            ->placeholder('4766'),
                         Select::make('role')
                             ->label(Labels::field('role'))
                             ->options(UserRole::options())

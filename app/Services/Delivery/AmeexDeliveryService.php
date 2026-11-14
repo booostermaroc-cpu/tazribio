@@ -8,12 +8,15 @@ use App\Models\DeliveryCompany;
 use App\Models\Order;
 use App\Models\PickupRequest;
 use App\Models\Shipment;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AmeexDeliveryService implements DeliveryCompanyServiceInterface
 {
     public const DEFAULT_BASE_URL = 'https://api.ameex.app';
+
+    protected ?User $actingUser = null;
 
     public const PATH_MASS_TRACKING = '/customer/Delivery/Parcels/MassTracking';
 
@@ -87,6 +90,133 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
     public function hubId(DeliveryCompany $company): ?string
     {
         return $this->resolvedHubId($company);
+    }
+
+    public function actingAs(?User $user): static
+    {
+        $this->actingUser = $user;
+
+        return $this;
+    }
+
+    /**
+     * Ameex staff user id shown as person badge.
+     * Priority: connected CODFlow user → order confirmer/creator → company fallback.
+     * Displayed name on Ameex is always the Ameex staff directory name for that id.
+     */
+    public function staffId(DeliveryCompany $company, ?Order $order = null): ?string
+    {
+        $order?->loadMissing(['confirmer', 'creator']);
+
+        foreach ($this->staffActorCandidates($order) as $actor) {
+            $fromUser = $this->normalizeStaffId($company, $actor->ameex_staff_id ?? null);
+
+            if (filled($fromUser)) {
+                return $fromUser;
+            }
+
+            $matched = $this->matchStaffIdByName($company, (string) $actor->name);
+
+            if (filled($matched)) {
+                return $matched;
+            }
+        }
+
+        $settings = $company->api_settings ?? [];
+
+        return $this->normalizeStaffId(
+            $company,
+            $settings['staff_id'] ?? $settings['ameex_staff_id'] ?? $settings['staff'] ?? null,
+        );
+    }
+
+    /** @return list<User> */
+    protected function staffActorCandidates(?Order $order): array
+    {
+        $actors = [];
+
+        if ($this->actingUser instanceof User) {
+            $actors[] = $this->actingUser;
+        }
+
+        foreach ([$order?->confirmer, $order?->creator] as $related) {
+            if ($related instanceof User) {
+                $actors[] = $related;
+            }
+        }
+
+        $unique = [];
+        foreach ($actors as $actor) {
+            $unique[$actor->id] = $actor;
+        }
+
+        return array_values($unique);
+    }
+
+    protected function normalizeStaffId(DeliveryCompany $company, mixed $value): ?string
+    {
+        if (! filled($value)) {
+            return null;
+        }
+
+        $staffId = $this->sanitizeCredential((string) $value);
+
+        if ($staffId === '' || $staffId === '0') {
+            return null;
+        }
+
+        // Never treat warehouse hub as staff person.
+        if (filled($this->hubId($company)) && (string) $staffId === (string) $this->hubId($company)) {
+            return null;
+        }
+
+        return $staffId;
+    }
+
+    protected function matchStaffIdByName(DeliveryCompany $company, string $name): ?string
+    {
+        $name = trim($name);
+
+        if ($name === '') {
+            return null;
+        }
+
+        $map = is_array($company->api_settings['ameex_staff_map'] ?? null)
+            ? $company->api_settings['ameex_staff_map']
+            : [];
+
+        $needle = mb_strtolower($name);
+
+        foreach ($map as $id => $staffName) {
+            if (mb_strtolower(trim((string) $staffName)) === $needle) {
+                return $this->normalizeStaffId($company, $id);
+            }
+        }
+
+        return null;
+    }
+
+    /** @param  array<string, mixed>  $parcel */
+    public function rememberStaffFromParcel(DeliveryCompany $company, array $parcel): void
+    {
+        $staff = is_array($parcel['staff_d'] ?? null) ? $parcel['staff_d'] : null;
+        $staffId = $this->normalizeStaffId($company, $staff['id'] ?? $parcel['staff'] ?? null);
+        $staffName = trim((string) ($staff['name'] ?? ''));
+
+        if (! filled($staffId) || $staffName === '') {
+            return;
+        }
+
+        $settings = $company->api_settings ?? [];
+        $map = is_array($settings['ameex_staff_map'] ?? null) ? $settings['ameex_staff_map'] : [];
+
+        if (($map[$staffId] ?? null) === $staffName) {
+            return;
+        }
+
+        $map[$staffId] = $staffName;
+        $settings['ameex_staff_map'] = $map;
+        $company->forceFill(['api_settings' => $settings])->save();
     }
 
     public function hubDisplayName(DeliveryCompany $company): ?string
@@ -243,11 +373,64 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             ];
         }
 
+        // Ameex renvoie souvent api:null / "not available with API key" pour la liste hubs.
+        // On conserve alors business_id + hub_id déjà saisis (ex. 21820 / 17).
+        $fallbackMap = $this->fallbackConfiguredBusinessesMap($company);
+
+        if ($fallbackMap !== []) {
+            $settings = $company->api_settings ?? [];
+            $settings['ameex_businesses_map'] = $fallbackMap;
+            $settings['ameex_businesses_synced_at'] = now()->toIso8601String();
+            $settings['ameex_businesses_sync_mode'] = 'manual_fallback';
+            unset($settings['ameex_businesses']);
+
+            if (blank($settings['business_id'] ?? null) && filled($this->apiId($company))) {
+                $settings['business_id'] = (string) $this->apiId($company);
+            }
+
+            $company->update(['api_settings' => $settings]);
+
+            return [
+                'success' => true,
+                'businesses' => $fallbackMap,
+                'message' => AmeexLabels::delivery('ameex_businesses_sync_manual_fallback', [
+                    'count' => count($fallbackMap),
+                ]),
+                'raw' => $lastRaw,
+            ];
+        }
+
         return [
             'success' => false,
             'message' => AmeexLabels::delivery('ameex_businesses_sync_failed', ['paths' => implode(', ', $tested)]),
             'raw' => $lastRaw,
         ];
+    }
+
+    /** @return array<string, string> */
+    public function fallbackConfiguredBusinessesMap(DeliveryCompany $company): array
+    {
+        $settings = $company->api_settings ?? [];
+        $map = [];
+
+        $businessId = $settings['business_id'] ?? $this->apiId($company);
+        $hubId = $settings['hub_id'] ?? null;
+
+        if (filled($businessId)) {
+            $businessId = $this->sanitizeCredential((string) $businessId);
+            $map[$businessId] = ((string) $businessId === (string) $this->apiId($company))
+                ? 'Expéditeur / Business #'.$businessId
+                : 'Expéditeur #'.$businessId;
+        }
+
+        if (filled($hubId)) {
+            $hubId = $this->sanitizeCredential((string) $hubId);
+            $map[$hubId] = ((string) $hubId === '17')
+                ? 'AGADIR HUB PRINCIPAL'
+                : 'Hub #'.$hubId;
+        }
+
+        return AmeexResponseParser::sanitizeBusinessesMap($map);
     }
 
     /** @param  array<string, string>  $map */
@@ -525,7 +708,19 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      */
     public function getMassInfo(DeliveryCompany $company, array $codes): array
     {
-        return $this->postCodes($company, 'info_parcel_path', self::PATH_MASS_INFO, $codes, 'Ameex mass info');
+        $result = $this->postCodes($company, 'info_parcel_path', self::PATH_MASS_INFO, $codes, 'Ameex mass info');
+
+        $parcels = $result['raw']['api']['parcels'] ?? null;
+        if (($result['success'] ?? false) && is_array($parcels)) {
+            foreach ($parcels as $parcel) {
+                if (is_array($parcel)) {
+                    $this->rememberStaffFromParcel($company, $parcel);
+                }
+            }
+            $company->refresh();
+        }
+
+        return $result;
     }
 
     /** @return array{success: bool, status?: string, parcel?: array<string, mixed>, message: string, raw?: array<string, mixed>} */
@@ -1304,13 +1499,14 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ? $this->productSummary($order)
                 : $this->productSummaryWithCodQuantities($order)],
             ['name' => 'cod', 'contents' => (string) $order->carrierCodAmount()],
+            ['name' => 'staff', 'contents' => (string) ($this->staffId($company, $order) ?? '')],
         ];
 
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
             $multipart = $this->withProductReferences($multipart, $order);
 
-            return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness);
+            return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness, $order);
         }
 
         return $multipart;
@@ -1406,14 +1602,14 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
                 ? $this->productSummary($order)
                 : $this->productSummaryWithCodQuantities($order)],
             ['name' => 'cod', 'contents' => (string) $order->carrierCodAmount()],
-            ['name' => 'staff', 'contents' => ''],
+            ['name' => 'staff', 'contents' => (string) ($this->staffId($company, $order) ?? '')],
         ];
 
         if ($stockMode) {
             array_unshift($multipart, ['name' => 'type', 'contents' => 'STOCK']);
             $multipart = $this->withProductReferences($multipart, $order);
 
-            return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness);
+            return $this->applyBusinessAndHubFields($multipart, $company, $businessId, $hubAsBusiness, $order);
         }
 
         return $multipart;
@@ -1431,7 +1627,7 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
      * @param  list<array{name: string, contents: mixed}>  $multipart
      * @return list<array{name: string, contents: mixed}>
      */
-    protected function applyBusinessAndHubFields(array $multipart, DeliveryCompany $company, string $senderBusinessId, bool $hubAsBusiness = false): array
+    protected function applyBusinessAndHubFields(array $multipart, DeliveryCompany $company, string $senderBusinessId, bool $hubAsBusiness = false, ?Order $order = null): array
     {
         $hubId = $this->hubId($company);
 
@@ -1444,14 +1640,14 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             $multipart = $this->ensureMultipartField($multipart, 'mdl_business', $senderBusinessId);
         }
 
-        return $this->withHubFields($multipart, $company);
+        return $this->withHubFields($multipart, $company, $order);
     }
 
     /**
      * @param  list<array{name: string, contents: mixed}>  $multipart
      * @return list<array{name: string, contents: mixed}>
      */
-    protected function withHubFields(array $multipart, DeliveryCompany $company): array
+    protected function withHubFields(array $multipart, DeliveryCompany $company, ?Order $order = null): array
     {
         $hubId = $this->hubId($company);
 
@@ -1459,7 +1655,11 @@ class AmeexDeliveryService implements DeliveryCompanyServiceInterface
             return $multipart;
         }
 
-        $multipart = $this->setMultipartField($multipart, 'staff', $hubId);
+        // Keep staff = connected CODFlow user's Ameex staff id. Hub stays on hub fields only.
+        if (filled($this->staffId($company, $order))) {
+            $multipart = $this->setMultipartField($multipart, 'staff', (string) $this->staffId($company, $order));
+        }
+
         $multipart = $this->ensureMultipartField($multipart, 'hub', $hubId);
         $multipart = $this->ensureMultipartField($multipart, 'mdl_hub', $hubId);
         $multipart = $this->ensureMultipartField($multipart, 'hub_id', $hubId);

@@ -86,6 +86,11 @@ class OrderResource extends Resource
         $query->orWhereHas('items.product', fn (Builder $productQuery) => $productQuery->where('sku', 'like', "%{$search}%"));
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['client', 'shipment.deliveryCompany']);
+    }
+
     public static function getGlobalSearchEloquentQuery(): Builder
     {
         return parent::getGlobalSearchEloquentQuery()->with(['client', 'shipment', 'items.product']);

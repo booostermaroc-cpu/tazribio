@@ -6,9 +6,15 @@ use App\Enums\OrderSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\ShipmentStatus;
+use App\Filament\Support\AmeexNotifications;
 use App\Filament\Support\EnumColumn;
 use App\Filament\Support\Labels;
+use App\Models\Order;
+use App\Models\Shipment;
+use App\Services\DeliveryIntegrationService;
 use App\Support\CarrierStuckOrders;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -22,6 +28,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class OrdersTable
 {
@@ -37,6 +44,21 @@ class OrdersTable
                 TextColumn::make('client.full_name')->label(Labels::field('client'))->searchable()->sortable(),
                 TextColumn::make('client.phone')->searchable()->label(Labels::field('phone')),
                 TextColumn::make('shipment.tracking_number')->searchable()->label(Labels::field('tracking')),
+                TextColumn::make('shipment.delivery_status')
+                    ->label(Labels::field('delivery_status'))
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state instanceof ShipmentStatus
+                        ? $state->label()
+                        : ShipmentStatus::tryFrom((string) $state)?->label())
+                    ->color(fn ($state) => $state instanceof ShipmentStatus
+                        ? $state->color()
+                        : ShipmentStatus::tryFrom((string) $state)?->color())
+                    ->placeholder('—')
+                    ->toggleable(),
+                TextColumn::make('shipment.ameex_last_status_name')
+                    ->label(__('codflow.ui.ameex_last_status'))
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('city')->label(Labels::field('city'))->searchable()->sortable(),
                 EnumColumn::badge('status', OrderStatus::class),
                 EnumColumn::badge('payment_status', PaymentStatus::class),
@@ -49,6 +71,16 @@ class OrdersTable
             ->filters([
                 TrashedFilter::make(),
                 SelectFilter::make('status')->options(OrderStatus::options()),
+                SelectFilter::make('delivery_status')
+                    ->label(Labels::field('delivery_status'))
+                    ->options(ShipmentStatus::options())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+
+                        return filled($value)
+                            ? $query->whereHas('shipment', fn (Builder $s) => $s->where('delivery_status', $value))
+                            : $query;
+                    }),
                 Filter::make('stuck_at_carrier')
                     ->label(__('codflow.filters.stuck_at_carrier'))
                     ->toggle()
@@ -57,7 +89,7 @@ class OrdersTable
                 SelectFilter::make('payment_method')->options(PaymentMethod::options()),
                 SelectFilter::make('source')->options(OrderSource::options()),
                 SelectFilter::make('city')
-                    ->options(fn () => \App\Models\Order::query()->whereNotNull('city')->distinct()->pluck('city', 'city')->all()),
+                    ->options(fn () => Order::query()->whereNotNull('city')->distinct()->pluck('city', 'city')->all()),
                 Filter::make('created_at')
                     ->label(Labels::filter('created_period'))
                     ->form([
@@ -93,6 +125,32 @@ class OrdersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('ameexMassTracking')
+                        ->label(__('codflow.delivery.ameex_mass_tracking'))
+                        ->icon('heroicon-o-arrow-path')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records): void {
+                            $shipments = Shipment::query()
+                                ->whereIn('order_id', $records->modelKeys())
+                                ->get();
+
+                            AmeexNotifications::notify(
+                                app(DeliveryIntegrationService::class)->refreshMassTracking($shipments)
+                            );
+                        }),
+                    BulkAction::make('ameexMassInfo')
+                        ->label(__('codflow.delivery.ameex_mass_info'))
+                        ->icon('heroicon-o-information-circle')
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records): void {
+                            $shipments = Shipment::query()
+                                ->whereIn('order_id', $records->modelKeys())
+                                ->get();
+
+                            AmeexNotifications::notify(
+                                app(DeliveryIntegrationService::class)->fetchMassInfo($shipments)
+                            );
+                        }),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Enums\PaymentMethod;
-use App\Filament\Resources\Shipments\ShipmentResource;
 use App\Filament\Support\Labels;
 use App\Filament\Support\OrderConfirmationSection;
 use App\Filament\Support\OrderFulfillmentSection;
@@ -98,10 +97,7 @@ class OrderInfolist
                         TextEntry::make('shipment.tracking_number')
                             ->label(Labels::field('tracking_number'))
                             ->placeholder('—')
-                            ->copyable()
-                            ->url(fn ($record): ?string => $record->shipment
-                                ? ShipmentResource::getUrl('view', ['record' => $record->shipment])
-                                : null),
+                            ->copyable(),
                         TextEntry::make('shipment.deliveryCompany.name')
                             ->label(Labels::field('delivery_company'))
                             ->placeholder('—'),
@@ -114,6 +110,21 @@ class OrderInfolist
                         TextEntry::make('shipment.ameex_parcel_code')
                             ->label(__('codflow.ui.ameex_parcel_code'))
                             ->copyable()
+                            ->placeholder('—'),
+                        TextEntry::make('shipment.ameex_delivery_note_ref')
+                            ->label(Labels::field('ameex_delivery_note_ref'))
+                            ->copyable()
+                            ->placeholder('—'),
+                        TextEntry::make('shipment.ameex_last_status_name')
+                            ->label(__('codflow.ui.ameex_last_status'))
+                            ->placeholder('—'),
+                        TextEntry::make('shipment.last_tracking_update')
+                            ->label(Labels::field('last_tracking_update'))
+                            ->dateTime('d/m/Y H:i')
+                            ->placeholder('—'),
+                        TextEntry::make('shipment.delivery_date')
+                            ->label(Labels::field('delivery_date'))
+                            ->date()
                             ->placeholder('—'),
                     ])
                     ->columns(4)

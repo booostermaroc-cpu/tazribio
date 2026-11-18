@@ -39,6 +39,12 @@ class ShipmentResource extends Resource
         return Nav::label('shipments');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Colis = Commandes : le suivi vit dans OrderResource, pas de menu séparé.
+        return false;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return ShipmentForm::configure($schema);
